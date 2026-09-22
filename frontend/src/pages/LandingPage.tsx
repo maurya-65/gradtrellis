@@ -127,7 +127,7 @@ export function LandingPage() {
 
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <Wordmark className="text-foreground" />
+          <Wordmark />
           <p className="max-w-xl">
             An independent student project, not affiliated with the University of New Brunswick. The Undergraduate
             Calendar and your Faculty advisor are the authority on degree requirements.

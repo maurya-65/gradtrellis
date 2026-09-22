@@ -24,8 +24,8 @@ export function ProfileMenu({ user }: { user: User }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-9 rounded-full" aria-label="Your profile">
-          <CircleUserRound className="size-7 text-muted-foreground" strokeWidth={1.5} />
+        <Button variant="ghost" size="icon" className="group size-9 rounded-full" aria-label="Your profile">
+          <CircleUserRound className="size-7 text-muted-foreground transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-12" strokeWidth={1.5} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">

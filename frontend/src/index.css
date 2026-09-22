@@ -119,6 +119,34 @@
   }
 }
 
+/* the logo's grad cap, thrown like at convocation: a crouch, up spinning, down with a bounce */
+@theme {
+  --animate-cap-toss: cap-toss 1.6s both;
+
+  @keyframes cap-toss {
+    0% {
+      transform: translateY(0) rotate(0);
+    }
+    12% {
+      transform: translateY(2px) rotate(-8deg);
+      animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1);
+    }
+    50% {
+      transform: translateY(-40px) rotate(-190deg);
+      animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
+    }
+    84% {
+      transform: translateY(0) rotate(-360deg);
+    }
+    92% {
+      transform: translateY(-3px) rotate(-360deg);
+    }
+    100% {
+      transform: translateY(0) rotate(-360deg);
+    }
+  }
+}
+
 /* the climber's idle sway on the trellis */
 @keyframes bob {
   50% {
