@@ -3,7 +3,18 @@ import { z } from "zod";
 import { requireUser } from "../auth.ts";
 import { courseIndex, gradingScale, programs } from "../catalog.ts";
 import { appUrl, sendEmail } from "../email.ts";
-import { Attempt, normalizeCourseCode, Result, runAudit, StudentRecord, Term, termOn } from "../engine/index.ts";
+import {
+  Attempt,
+  checkRequisite,
+  nextTerm,
+  normalizeCourseCode,
+  parseRequisite,
+  Result,
+  runAudit,
+  StudentRecord,
+  Term,
+  termOn,
+} from "../engine/index.ts";
 import {
   addAttempt,
   createStudent,
@@ -51,6 +62,22 @@ const AttemptBody = Attempt.extend({
 });
 
 const ResultBody = z.object({ result: Result });
+
+// ?courses=CS 3383,CS 3413&term=Winter 2027 (term defaults to the next one)
+const EligibilityQuery = z.object({
+  courses: z
+    .string()
+    .transform((s) => s.split(","))
+    .pipe(z.array(CourseCodeInput).min(1).max(50)),
+  term: z
+    .string()
+    .regex(/^(Winter|Summer|Fall) \d{4}$/, "expected a term like 'Winter 2027'")
+    .transform((s) => {
+      const [season, year] = s.split(" ");
+      return Term.parse({ season, year: Number(year) });
+    })
+    .optional(),
+});
 
 const ReplaceBody = z.object({
   attempts: z.array(AttemptBody).max(200),
@@ -214,4 +241,33 @@ studentRouter.get("/audit", async (_req, res) => {
     asOf: termOn(new Date()),
   });
   res.json({ audit });
+});
+
+// Can the student take these courses in a term? Checked against the calendar's prerequisite
+// text; parts it can't read come back as "review" for a person to decide.
+studentRouter.get("/eligibility", async (req, res) => {
+  const query = EligibilityQuery.parse(req.query);
+  const unknown = query.courses.filter((code) => !courseIndex.has(code));
+  if (unknown.length) {
+    res.status(400).json({ error: { message: `${unknown.join(", ")} ${unknown.length === 1 ? "isn't" : "aren't"} in the current calendar` } });
+    return;
+  }
+  const id = await ownStudentId(res);
+  if (!id) return;
+  const { attempts } = StudentRecord.parse(await getStudent(id));
+  const term = query.term ?? nextTerm(termOn(new Date()));
+
+  const courses = query.courses.map((code) => {
+    const course = courseIndex.get(code)!;
+    const requisite = course.prereqText ? parseRequisite(course.prereqText) : null;
+    return {
+      code,
+      title: course.title,
+      prereqText: course.prereqText,
+      coreqText: course.coreqText,
+      requisite,
+      status: requisite ? checkRequisite(requisite, { attempts, term, index: courseIndex, scale: gradingScale }) : "met",
+    };
+  });
+  res.json({ term, courses });
 });

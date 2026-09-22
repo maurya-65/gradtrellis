@@ -29,3 +29,8 @@ export function calendarYearOf(t: Term): string {
   const start = t.season === "Fall" ? t.year : t.year - 1;
   return `${start}-${start + 1}`;
 }
+
+export function nextTerm(t: Term): Term {
+  const i = SEASONS.indexOf(t.season);
+  return i === SEASONS.length - 1 ? { season: SEASONS[0]!, year: t.year + 1 } : { season: SEASONS[i + 1]!, year: t.year };
+}

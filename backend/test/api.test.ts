@@ -442,6 +442,24 @@ describe.skipIf(!databaseUrl)("API", () => {
       expect((await upload(cookie, Buffer.concat([Buffer.from("%PDF-"), Buffer.alloc(6 * 1024 * 1024)]))).status).toBe(413);
     });
 
+    it("checks prerequisites for a term, counting in-progress courses as pending", async () => {
+      const { cookie } = await newStudent();
+      await call("POST", "/student/attempts", cs1073, cookie);
+      await call("POST", "/student/attempts", { code: "CS 1083", term: { season: "Winter", year: 2025 }, result: "IP" }, cookie);
+
+      const res = await call("GET", `/student/eligibility?courses=${encodeURIComponent("cs1083,CS 2043,CS 2999")}&term=Fall%202025`, undefined, cookie);
+      expect(res.status).toBe(200);
+      expect(res.body.term).toEqual({ season: "Fall", year: 2025 });
+      expect(res.body.courses.map((c: { code: string; status: string }) => [c.code, c.status])).toEqual([
+        ["CS 1083", "met"],
+        ["CS 2043", "pending"],
+        ["CS 2999", "review"],
+      ]);
+
+      expect((await call("GET", "/student/eligibility?courses=CS%209999", undefined, cookie)).status).toBe(400);
+      expect((await call("GET", "/student/eligibility?courses=CS%201083&term=Spring%202025", undefined, cookie)).status).toBe(400);
+    });
+
     it("audits the student", async () => {
       const { cookie } = await newStudent();
       await call("POST", "/student/attempts", cs1073, cookie);

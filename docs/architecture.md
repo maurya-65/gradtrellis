@@ -77,6 +77,11 @@ All routes are under `/api`. Errors look like `{ "error": { "message", "details"
 | `PATCH /student/attempts/:attemptId` | Change a transcript line's result (e.g. in progress to a grade) |
 | `DELETE /student/attempts/:attemptId` | Remove a transcript line |
 | `GET /student/audit` | Degree audit |
+| `GET /student/eligibility?courses=&term=` | Whether the student meets each course's prerequisites for a term (default: the next one) |
+
+## Prerequisites
+
+`src/engine/requisites.ts` parses a course's prerequisite text into a tree of courses, credit-hour minimums and `all`/`any` groups. Commas take the list's conjunction; `;` and `, and`/`, or` separate higher-level groups; trailing notes and "(X recommended)" asides are dropped. Anything else (instructor permission, program enrolment, grade minimums, lists mixing `and` and `or` without brackets) stays text. Checking a tree for a term gives `met` (passed before the term), `pending` (only through courses in progress or planned before it), `missing`, or `review` (text decides). About 53% of the catalog's prerequisites parse fully, and 66% of CS, MATH and STAT. Corequisites are kept as raw text.
 
 ## Accounts
 

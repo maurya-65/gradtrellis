@@ -8,4 +8,5 @@ export * from "./courses.ts";
 export * from "./policy.ts";
 export * from "./programs.ts";
 export * from "./audit/index.ts";
-export { calendarYearOf, compareTerms, termLabel, termOn } from "./terms.ts";
+export * from "./requisites.ts";
+export { calendarYearOf, compareTerms, nextTerm, termLabel, termOn } from "./terms.ts";
