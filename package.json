@@ -16,7 +16,7 @@
     "scrape": "npm run scrape -w backend",
     "build": "npm run build -w frontend",
     "typecheck": "npm run typecheck --workspaces",
-    "test": "npm test --workspaces"
+    "test": "npm test -w backend"
   },
   "devDependencies": {
     "typescript": "^7.0.2"

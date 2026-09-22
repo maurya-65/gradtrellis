@@ -7,6 +7,15 @@ export type StoredAttempt = Attempt & { id: string };
 export type Student = Omit<StudentRecord, "attempts"> & { attempts: StoredAttempt[] };
 export type { AuditResult };
 
+export interface User {
+  id: string;
+  email: string;
+  studentNumber: string;
+  // true once a transcript with the same student number was uploaded
+  verified: boolean;
+  name: string | null;
+}
+
 export interface CourseSummary {
   code: string;
   title: string;
@@ -40,26 +49,35 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 }
 
 export const api = {
+  signup: (input: { email: string; studentNumber: string; password: string }) => request<{ message: string }>("POST", "/auth/signup", input),
+
+  confirm: (token: string) => request<{ user: User }>("POST", "/auth/confirm", { token }).then((r) => r.user),
+
+  login: (email: string, password: string) => request<{ user: User }>("POST", "/auth/login", { email, password }).then((r) => r.user),
+
+  logout: () => request<void>("POST", "/auth/logout"),
+
+  me: () => request<{ user: User; student: Student | null }>("GET", "/auth/me"),
+
   searchCourses: (q: string, limit = 12) =>
     request<{ courses: CourseSummary[] }>("GET", `/courses?q=${encodeURIComponent(q)}&limit=${limit}`).then((r) => r.courses),
 
+  // the logged-in user's own profile; the session decides whose it is
   createStudent: (input: { program: { entry: { season: Season; year: number } }; designations: string[] }) =>
-    request<{ student: Student }>("POST", "/students", input).then((r) => r.student),
+    request<{ student: Student }>("POST", "/student", input).then((r) => r.student),
 
-  getStudent: (id: string) => request<{ student: Student }>("GET", `/students/${id}`).then((r) => r.student),
+  updateDesignations: (designations: string[]) => request<{ student: Student }>("PATCH", "/student", { designations }).then((r) => r.student),
 
-  updateDesignations: (id: string, designations: string[]) =>
-    request<{ student: Student }>("PATCH", `/students/${id}`, { designations }).then((r) => r.student),
+  addAttempt: (attempt: Omit<StoredAttempt, "id" | "notations"> & { notations?: Attempt["notations"] }) =>
+    request<{ attempt: StoredAttempt }>("POST", "/student/attempts", attempt).then((r) => r.attempt),
 
-  addAttempt: (id: string, attempt: Omit<StoredAttempt, "id" | "notations"> & { notations?: Attempt["notations"] }) =>
-    request<{ attempt: StoredAttempt }>("POST", `/students/${id}/attempts`, attempt).then((r) => r.attempt),
+  replaceAttempts: (attempts: Array<Omit<StoredAttempt, "id" | "notations">>) =>
+    request<{ student: Student }>("PUT", "/student/attempts", { attempts }).then((r) => r.student),
 
-  replaceAttempts: (id: string, attempts: Array<Omit<StoredAttempt, "id" | "notations">>) =>
-    request<{ student: Student }>("PUT", `/students/${id}/attempts`, { attempts }).then((r) => r.student),
+  // also verifies the account's student number against the one on the transcript
+  uploadTranscript: (file: File) => request<{ user: User }>("PUT", "/student/transcript", file).then((r) => r.user),
 
-  uploadTranscript: (id: string, file: File) => request<void>("PUT", `/students/${id}/transcript`, file),
+  deleteAttempt: (attemptId: string) => request<void>("DELETE", `/student/attempts/${attemptId}`),
 
-  deleteAttempt: (id: string, attemptId: string) => request<void>("DELETE", `/students/${id}/attempts/${attemptId}`),
-
-  getAudit: (id: string) => request<{ audit: AuditResult }>("GET", `/students/${id}/audit`).then((r) => r.audit),
+  getAudit: () => request<{ audit: AuditResult }>("GET", "/student/audit").then((r) => r.audit),
 };

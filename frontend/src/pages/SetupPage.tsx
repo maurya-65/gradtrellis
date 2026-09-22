@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { api, type Season } from "../api/client.ts";
 import { DesignationFields } from "../components/DesignationFields.tsx";
-import { useStudent } from "../hooks/useStudent.tsx";
+import { useSession } from "../hooks/useSession.tsx";
 
 const thisYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 8 }, (_, i) => thisYear - i);
@@ -10,7 +10,7 @@ const YEARS = Array.from({ length: 8 }, (_, i) => thisYear - i);
 const ENTRY_SEASONS: Season[] = ["Fall", "Winter", "Summer"];
 
 export function SetupPage() {
-  const { setStudent } = useStudent();
+  const { setStudent } = useSession();
   const navigate = useNavigate();
   const [season, setSeason] = useState<Season>("Fall");
   const [year, setYear] = useState(thisYear - 2);
@@ -35,11 +35,8 @@ export function SetupPage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <h1 className="text-2xl font-semibold text-slate-900">Plan your UNB Computer Science degree</h1>
-      <p className="mt-2 text-slate-700">
-        Enter the courses you've taken and GradTrellis shows which Bachelor of Computer Science requirements you've met,
-        what's in progress and what's left, using the calendar for the year you started.
-      </p>
+      <h1 className="text-2xl font-semibold text-slate-900">Set up your profile</h1>
+      <p className="mt-2 text-slate-700">Your degree requirements come from the calendar of the year you started, so we need that first.</p>
 
       <form onSubmit={submit} className="mt-8 space-y-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <fieldset>

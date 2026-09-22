@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router";
-import { useStudent } from "../hooks/useStudent.tsx";
+import { useSession } from "../hooks/useSession.tsx";
 import { ProfileMenu } from "./ProfileMenu.tsx";
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -8,7 +8,7 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export function Layout() {
-  const { student } = useStudent();
+  const { user, student } = useSession();
   const { pathname } = useLocation();
 
   return (
@@ -19,16 +19,29 @@ export function Layout() {
             <img src="/favicon.svg" alt="" className="h-7 w-7" />
             GradTrellis
           </NavLink>
-          {student && (
+          {user ? (
             <nav aria-label="Main" className="flex gap-1">
-              <NavLink to="/transcript" className={navClass}>
-                Transcript
-              </NavLink>
-              <NavLink to="/audit" className={navClass}>
-                Degree audit
-              </NavLink>
+              {student && (
+                <>
+                  <NavLink to="/transcript" className={navClass}>
+                    Transcript
+                  </NavLink>
+                  <NavLink to="/audit" className={navClass}>
+                    Degree audit
+                  </NavLink>
+                </>
+              )}
               {/* keyed by page so the menu closes on navigation */}
-              <ProfileMenu key={pathname} student={student} />
+              <ProfileMenu key={pathname} user={user} student={student} />
+            </nav>
+          ) : (
+            <nav aria-label="Account" className="flex gap-1">
+              <NavLink to="/login" className={navClass}>
+                Log in
+              </NavLink>
+              <NavLink to="/signup" className={navClass}>
+                Sign up
+              </NavLink>
             </nav>
           )}
         </div>

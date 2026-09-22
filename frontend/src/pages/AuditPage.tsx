@@ -6,10 +6,10 @@ import { AuditWarnings } from "../components/AuditWarnings.tsx";
 import { NotCountedTable } from "../components/NotCountedTable.tsx";
 import { RequirementCard } from "../components/RequirementCard.tsx";
 import { StatusBadge } from "../components/StatusBadge.tsx";
-import { useStudent } from "../hooks/useStudent.tsx";
+import { useSession } from "../hooks/useSession.tsx";
 
 export function AuditPage() {
-  const { student } = useStudent();
+  const { student } = useSession();
   const [audit, setAudit] = useState<AuditResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +17,7 @@ export function AuditPage() {
     if (!student) return;
     let cancelled = false;
     api
-      .getAudit(student.id)
+      .getAudit()
       .then((a) => !cancelled && setAudit(a))
       .catch((err) => !cancelled && setError(err instanceof Error ? err.message : "couldn't run the audit"));
     return () => {

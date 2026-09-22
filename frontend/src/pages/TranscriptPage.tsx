@@ -5,10 +5,10 @@ import { AddCourseForm } from "../components/AddCourseForm.tsx";
 import { ImportTranscript } from "../components/ImportTranscript.tsx";
 import { TermTable } from "../components/TermTable.tsx";
 import { compareTerms, termLabel } from "backend/engine/terms";
-import { useStudent } from "../hooks/useStudent.tsx";
+import { useSession } from "../hooks/useSession.tsx";
 
 export function TranscriptPage() {
-  const { student, refresh } = useStudent();
+  const { student, refresh } = useSession();
 
   const byTerm = useMemo(() => {
     const groups = new Map<string, { label: string; term: StoredAttempt["term"]; attempts: StoredAttempt[] }>();
@@ -24,7 +24,7 @@ export function TranscriptPage() {
   if (!student) return null;
 
   const remove = async (a: StoredAttempt) => {
-    await api.deleteAttempt(student.id, a.id);
+    await api.deleteAttempt(a.id);
     await refresh();
   };
 

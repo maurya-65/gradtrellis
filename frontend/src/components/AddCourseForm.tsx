@@ -32,7 +32,7 @@ export function AddCourseForm({ student, onAdded }: Props) {
     setBusy(true);
     setError(null);
     try {
-      await api.addAttempt(student.id, {
+      await api.addAttempt({
         code: selected.code,
         term: { season, year: Number(year) },
         result,

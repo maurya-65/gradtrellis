@@ -6,8 +6,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc",
-    "test": "vitest run"
+    "typecheck": "tsc"
   },
   "dependencies": {
     "pdfjs-dist": "^6.3.289",
@@ -22,7 +21,6 @@
     "@vitejs/plugin-react": "^6.1.1",
     "backend": "*",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.1"
+    "vite": "^8.3.0"
   }
 }

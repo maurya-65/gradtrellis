@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseTranscript } from "./parse.ts";
+import { parseTranscript, toLines } from "../src/transcript/parse.ts";
 
 // Laid out like pdf.ts reads the myUNB unofficial transcript. Synthetic: no real student.
 const TRANSCRIPT = [
@@ -22,8 +22,21 @@ const TRANSCRIPT = [
   ["Awards Granted:"],
 ];
 
+describe("toLines", () => {
+  const run = (str: string, x: number, y: number) => ({ str, transform: [1, 0, 0, 1, x, y], width: str.length * 5 });
+
+  it("joins nearby words and splits columns at wide gaps, top line first", () => {
+    const lines = toLines([run("B", 385, 600), run("CS*1073", 77, 600), run("INTR", 147, 600), run("COMP", 174, 600), run("2024/FA", 50, 620)]);
+    expect(lines).toEqual([["2024/FA"], ["CS*1073", "INTR COMP", "B"]]);
+  });
+});
+
 describe("parseTranscript", () => {
-  const { attempts, unreadable } = parseTranscript(TRANSCRIPT);
+  const { student, attempts, unreadable } = parseTranscript(TRANSCRIPT);
+
+  it("reads the student number and name from the header", () => {
+    expect(student).toEqual({ number: "1234567", name: "Student, Test" });
+  });
 
   it("reads every course line under its term", () => {
     expect(attempts.map((a) => `${a.term.season} ${a.term.year} ${a.code} ${a.result}`)).toEqual([

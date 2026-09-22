@@ -40,7 +40,7 @@ Hand-written queries and numbered `.sql` migrations. Fewer dependencies, and the
 
 ## 2026-09-22: No accounts in the first version
 
-A profile id is kept in the browser so the audit could ship first. Accounts will add a `users` table and a nullable owner column on `students`.
+A profile id is kept in the browser so the audit could ship first. (Replaced by accounts below.)
 
 ## 2026-09-22: Proprietary license
 
@@ -64,3 +64,7 @@ Guardrails are part of the design, not an add-on: the advisor only answers quest
 ## 2026-09-22: Keep each student's latest transcript PDF
 
 The import used to keep the PDF in the browser. We now store the latest upload per student (a new one replaces it) so later features can use more of the transcript than the course lines. It holds personal data, so: the privacy section (to be written) will say we keep it, nothing serves it back until there are accounts to protect it, and it's deleted with the profile.
+
+## 2026-09-22: Accounts with server-side sessions
+
+Students sign up with their UNB email, student number and a password, and the account only exists once the email is confirmed. Logins are server-side sessions in an `httpOnly` cookie rather than JWTs: with one app and one database, a sessions table makes logout and revoking access immediate, which a JWT can't do without a blocklist. The student number is an identifier, not a secret, so it's never used to log in. It only counts once a transcript with the same number verifies it, so typing someone else's number can't lock them out.

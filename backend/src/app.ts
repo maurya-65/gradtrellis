@@ -1,8 +1,9 @@
 import express, { type ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { snapshot } from "./catalog.ts";
+import { authRouter } from "./routes/auth.ts";
 import { coursesRouter } from "./routes/courses.ts";
-import { studentsRouter } from "./routes/students.ts";
+import { studentRouter } from "./routes/student.ts";
 
 export const app = express();
 
@@ -13,7 +14,8 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", calendarYear: snapshot.calendarYear });
 });
 app.use("/api/courses", coursesRouter);
-app.use("/api/students", studentsRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/student", studentRouter);
 
 app.use((req, res) => {
   res.status(404).json({ error: { message: `no route for ${req.method} ${req.path}` } });

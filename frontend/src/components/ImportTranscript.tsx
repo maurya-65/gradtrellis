@@ -1,15 +1,15 @@
 import { useState, type ChangeEvent } from "react";
 import { termLabel } from "backend/engine/terms";
 import { api, type Result, type Student } from "../api/client.ts";
-import { useStudent } from "../hooks/useStudent.tsx";
-import { parseTranscript, type ParsedAttempt } from "../transcript/parse.ts";
+import { useSession } from "../hooks/useSession.tsx";
+import { parseTranscript, type ParsedAttempt } from "backend/transcript";
 import { readPdfLines } from "../transcript/pdf.ts";
 import { resultOptions } from "./terms.ts";
 
 // The PDF is parsed in the browser. On save, the file is stored with the profile
 // (replacing any earlier one) and the reviewed courses replace the transcript.
 export function ImportTranscript({ student }: { student: Student }) {
-  const { setStudent } = useStudent();
+  const { user, setUser, setStudent } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [attempts, setAttempts] = useState<ParsedAttempt[] | null>(null);
   const [unreadable, setUnreadable] = useState<string[]>([]);
@@ -24,7 +24,9 @@ export function ImportTranscript({ student }: { student: Student }) {
     setError(null);
     try {
       const parsed = parseTranscript(await readPdfLines(await file.arrayBuffer()));
-      if (parsed.attempts.length === 0) {
+      if (parsed.student && parsed.student.number !== user?.studentNumber) {
+        setError(`This transcript is for student number ${parsed.student.number}, but your account has ${user?.studentNumber}.`);
+      } else if (parsed.attempts.length === 0) {
         setError("No courses found. Upload the unofficial transcript PDF from myUNB.");
       } else {
         setFile(file);
@@ -43,8 +45,10 @@ export function ImportTranscript({ student }: { student: Student }) {
     setBusy(true);
     setError(null);
     try {
-      await api.uploadTranscript(student.id, file);
-      setStudent(await api.replaceAttempts(student.id, attempts));
+      // upload first: it checks the student number before any courses change
+      const verified = await api.uploadTranscript(file);
+      setStudent(await api.replaceAttempts(attempts));
+      await setUser(verified);
       setAttempts(null);
       setFile(null);
     } catch (err) {

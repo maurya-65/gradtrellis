@@ -2,12 +2,21 @@ import { existsSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { join } from "node:path";
 import type pg from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { sampleTranscript } from "./transcript-pdf.ts";
 
 const envFile = join(import.meta.dirname, "..", ".env");
 if (existsSync(envFile)) process.loadEnvFile(envFile);
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
+
+// No mail provider in tests: collect what would have been sent.
+const sent = vi.hoisted(() => [] as Array<{ to: string; subject: string; text: string }>);
+vi.mock("../src/email.ts", () => ({
+  sendEmail: async (to: string, subject: string, text: string) => {
+    sent.push({ to, subject, text });
+  },
+}));
 
 // Runs against a real database. The tables in TEST_DATABASE_URL are dropped and recreated.
 describe.skipIf(!databaseUrl)("API", () => {
@@ -22,7 +31,7 @@ describe.skipIf(!databaseUrl)("API", () => {
     const { migrate } = await import("../src/migrate.ts");
     const { app } = await import("../src/app.ts");
 
-    await pool.query("DROP TABLE IF EXISTS transcripts, attempts, students, schema_migrations");
+    await pool.query("DROP TABLE IF EXISTS transcripts, attempts, students, sessions, signups, users, schema_migrations");
     await migrate();
 
     const server = app.listen(0);
@@ -37,20 +46,284 @@ describe.skipIf(!databaseUrl)("API", () => {
   afterAll(() => close());
 
   // responses are loosely typed here; the assertions check their shape
-  async function call(method: string, path: string, body?: unknown): Promise<{ status: number; body: any }> {
-    const res = await fetch(base + path, {
-      method,
-      headers: body === undefined ? {} : { "content-type": "application/json" },
-      body: typeof body === "string" ? body : JSON.stringify(body),
-    });
-    return { status: res.status, body: res.status === 204 ? null : await res.json() };
+  async function call(method: string, path: string, body?: unknown, cookie?: string): Promise<{ status: number; body: any; cookie?: string }> {
+    const headers: Record<string, string> = {};
+    if (body !== undefined) headers["content-type"] = "application/json";
+    if (cookie) headers.cookie = cookie;
+    const res = await fetch(base + path, { method, headers, body: typeof body === "string" ? body : JSON.stringify(body) });
+    const setCookie = res.headers.get("set-cookie")?.split(";")[0];
+    return { status: res.status, body: res.status === 204 ? null : await res.json(), ...(setCookie && { cookie: setCookie }) };
   }
 
-  async function newStudent(designations: string[] = []) {
-    const res = await call("POST", "/students", { program: { entry: { season: "Fall", year: 2024 } }, designations });
-    expect(res.status).toBe(201);
-    return res.body.student;
+  let counter = 0;
+  function newIdentity() {
+    counter++;
+    return { email: `student${counter}@unb.ca`, studentNumber: String(3000000 + counter), password: "correct horse battery" };
   }
+
+  function linkTokenFor(email: string): string | undefined {
+    const mail = sent.findLast((m) => m.to === email);
+    return mail?.text.match(/confirm\?token=([\w-]+)/)?.[1];
+  }
+
+  // signs up, confirms, and returns the session cookie
+  async function newUser(identity = newIdentity()): Promise<string> {
+    expect((await call("POST", "/auth/signup", identity)).status).toBe(202);
+    const confirmed = await call("POST", "/auth/confirm", { token: linkTokenFor(identity.email) });
+    expect(confirmed.status).toBe(201);
+    return confirmed.cookie!;
+  }
+
+  async function newStudent(designations: string[] = [], identity = newIdentity()) {
+    const cookie = await newUser(identity);
+    const res = await call("POST", "/student", { program: { entry: { season: "Fall", year: 2024 } }, designations }, cookie);
+    expect(res.status).toBe(201);
+    return { cookie, identity, student: res.body.student };
+  }
+
+  async function upload(cookie: string, file: Buffer): Promise<{ status: number; body: any }> {
+    const res = await fetch(`${base}/student/transcript`, {
+      method: "PUT",
+      headers: { "content-type": "application/pdf", cookie },
+      body: new Uint8Array(file),
+    });
+    return { status: res.status, body: await res.json() };
+  }
+
+  const cs1073 = { code: "CS 1073", term: { season: "Fall", year: 2024 }, result: "A" };
+
+  describe("accounts", () => {
+    it("creates the account only once the emailed link is confirmed", async () => {
+      const identity = newIdentity();
+      expect((await call("POST", "/auth/signup", identity)).status).toBe(202);
+      expect(sent.at(-1)).toMatchObject({ to: identity.email, subject: "Confirm your GradTrellis account" });
+
+      expect((await call("POST", "/auth/login", identity)).status).toBe(401);
+
+      const confirmed = await call("POST", "/auth/confirm", { token: linkTokenFor(identity.email) });
+      expect(confirmed.status).toBe(201);
+      expect(confirmed.body.user).toMatchObject({ email: identity.email, studentNumber: identity.studentNumber });
+
+      const me = await call("GET", "/auth/me", undefined, confirmed.cookie);
+      expect(me.body).toMatchObject({ user: { email: identity.email }, student: null });
+    });
+
+    it("uses a confirmation link only once", async () => {
+      const identity = newIdentity();
+      await call("POST", "/auth/signup", identity);
+      const token = linkTokenFor(identity.email);
+      expect((await call("POST", "/auth/confirm", { token })).status).toBe(201);
+      expect((await call("POST", "/auth/confirm", { token })).status).toBe(400);
+    });
+
+    it("only accepts UNB emails, 7-digit student numbers and 8+ character passwords", async () => {
+      const res = await call("POST", "/auth/signup", { email: "me@gmail.com", studentNumber: "12345", password: "short" });
+      expect(res.status).toBe(400);
+      expect(res.body.error.details.map((d: { path: string }) => d.path).sort()).toEqual(["email", "password", "studentNumber"]);
+    });
+
+    it("doesn't reveal an existing email, and never creates a second account for it", async () => {
+      const identity = newIdentity();
+      await newUser(identity);
+
+      const sameEmail = await call("POST", "/auth/signup", { ...newIdentity(), email: identity.email });
+      expect(sameEmail.status).toBe(202);
+      expect(sent.at(-1)).toMatchObject({ to: identity.email, subject: "You already have a GradTrellis account" });
+
+      const { rows } = await db.query("SELECT count(*)::int AS n FROM users WHERE email = $1", [identity.email]);
+      expect(rows[0].n).toBe(1);
+    });
+
+    it("logs in and out", async () => {
+      const identity = newIdentity();
+      await newUser(identity);
+      expect((await call("POST", "/auth/login", { ...identity, password: "wrong password" })).status).toBe(401);
+
+      const login = await call("POST", "/auth/login", { email: identity.email.toUpperCase(), password: identity.password });
+      expect(login.status).toBe(200);
+      expect((await call("GET", "/auth/me", undefined, login.cookie)).status).toBe(200);
+
+      expect((await call("POST", "/auth/logout", undefined, login.cookie)).status).toBe(204);
+      expect((await call("GET", "/auth/me", undefined, login.cookie)).status).toBe(401);
+    });
+
+    it("locks login after 10 wrong passwords", async () => {
+      const identity = newIdentity();
+      await newUser(identity);
+      for (let i = 0; i < 10; i++) await call("POST", "/auth/login", { ...identity, password: "wrong password" });
+      expect((await call("POST", "/auth/login", identity)).status).toBe(429);
+    });
+  });
+
+  describe("student number verification", () => {
+    it("verifies the account from a transcript with the same student number", async () => {
+      const { cookie, identity } = await newStudent();
+      const res = await upload(cookie, sampleTranscript(identity.studentNumber, "Student, Verified"));
+      expect(res.status).toBe(200);
+      expect(res.body.user).toMatchObject({ verified: true, name: "Student, Verified" });
+      expect((await call("GET", "/auth/me", undefined, cookie)).body.user.verified).toBe(true);
+    });
+
+    it("refuses a transcript with a different student number and stores nothing", async () => {
+      const { cookie, student } = await newStudent();
+      const res = await upload(cookie, sampleTranscript("1111111"));
+      expect(res.status).toBe(400);
+      expect(res.body.error.message).toContain("different student number");
+      expect((await call("GET", "/auth/me", undefined, cookie)).body.user.verified).toBe(false);
+      const { rowCount } = await db.query("SELECT 1 FROM transcripts WHERE student_id = $1", [student.id]);
+      expect(rowCount).toBe(0);
+    });
+
+    it("refuses a PDF without a student number", async () => {
+      const { cookie } = await newStudent();
+      const res = await upload(cookie, Buffer.from("%PDF-1.4 not really a transcript"));
+      expect(res.status).toBe(400);
+      expect(res.body.error.message).toContain("Couldn't find a student number");
+    });
+
+    it("doesn't let someone typing your number lock you out; only one account can verify it", async () => {
+      const yours = newIdentity();
+      const squatter = { ...newIdentity(), studentNumber: yours.studentNumber };
+      const { cookie: theirCookie } = await newStudent([], squatter);
+
+      // the squatter got there first, but a typed number blocks nobody
+      const { cookie } = await newStudent([], yours);
+      expect((await upload(cookie, sampleTranscript(yours.studentNumber))).status).toBe(200);
+
+      // without your transcript they can't verify; with a copy of it, the number is already taken
+      const res = await upload(theirCookie, sampleTranscript(yours.studentNumber));
+      expect(res.status).toBe(409);
+
+      // and new signups with a verified number are turned away by email
+      const late = newIdentity();
+      await call("POST", "/auth/signup", { ...late, studentNumber: yours.studentNumber });
+      expect(sent.at(-1)).toMatchObject({ to: late.email, subject: "That student number is already registered" });
+      expect(linkTokenFor(late.email)).toBeUndefined();
+    });
+  });
+
+  describe("student profile", () => {
+    it("needs a login", async () => {
+      expect((await call("GET", "/student")).status).toBe(401);
+      expect((await call("GET", "/student/audit", undefined, "sid=made-up")).status).toBe(401);
+    });
+
+    it("creates one profile per account, with UNB BCS defaults", async () => {
+      const { cookie, student } = await newStudent(["honours"]);
+      expect(student.program).toEqual({ institution: "unb", campus: "fredericton", code: "BCS", entry: { season: "Fall", year: 2024 } });
+      expect(student.designations).toEqual(["honours"]);
+      expect((await call("GET", "/student", undefined, cookie)).body.student).toEqual(student);
+
+      const again = await call("POST", "/student", { program: { entry: { season: "Fall", year: 2025 } } }, cookie);
+      expect(again.status).toBe(409);
+    });
+
+    it("asks for a profile before anything else", async () => {
+      const cookie = await newUser();
+      expect((await call("GET", "/student/audit", undefined, cookie)).status).toBe(404);
+    });
+
+    it("changes designations", async () => {
+      const { cookie } = await newStudent();
+      const res = await call("PATCH", "/student", { designations: ["cybersecurity"] }, cookie);
+      expect(res.body.student.designations).toEqual(["cybersecurity"]);
+    });
+
+    it("adds attempts, normalizing the course code, and returns them in term order", async () => {
+      const { cookie } = await newStudent();
+      await call("POST", "/student/attempts", { code: "cs1083", term: { season: "Winter", year: 2025 }, result: "B" }, cookie);
+      const first = await call("POST", "/student/attempts", cs1073, cookie);
+      expect(first.status).toBe(201);
+      expect(first.body.attempt).toMatchObject({ code: "CS 1073", result: "A", notations: [] });
+
+      const { body } = await call("GET", "/student", undefined, cookie);
+      expect(body.student.attempts.map((a: { code: string }) => a.code)).toEqual(["CS 1073", "CS 1083"]);
+    });
+
+    it("needs credit hours for a course that isn't in the current calendar", async () => {
+      const { cookie } = await newStudent();
+      const attempt = { code: "ABC 1234", term: { season: "Fall", year: 2024 }, result: "TR" };
+      expect((await call("POST", "/student/attempts", attempt, cookie)).status).toBe(400);
+
+      const withHours = await call("POST", "/student/attempts", { ...attempt, creditHours: 3, title: "Transfer" }, cookie);
+      expect(withHours.status).toBe(201);
+      expect(withHours.body.attempt).toMatchObject({ creditHours: 3, title: "Transfer" });
+    });
+
+    it("rejects invalid attempts with details", async () => {
+      const { cookie } = await newStudent();
+      const res = await call("POST", "/student/attempts", { code: "not a code", term: { season: "Spring", year: 2024 }, result: "Z" }, cookie);
+      expect(res.status).toBe(400);
+      expect(res.body.error.details.map((d: { path: string }) => d.path).sort()).toEqual(["code", "result", "term.season"]);
+    });
+
+    it("deletes an attempt once, and only the owner can", async () => {
+      const { cookie } = await newStudent();
+      const { body } = await call("POST", "/student/attempts", cs1073, cookie);
+      const path = `/student/attempts/${body.attempt.id}`;
+
+      const stranger = await newStudent();
+      expect((await call("DELETE", path, undefined, stranger.cookie)).status).toBe(404);
+      expect((await call("DELETE", path, undefined, cookie)).status).toBe(204);
+      expect((await call("DELETE", path, undefined, cookie)).status).toBe(404);
+      expect((await call("DELETE", "/student/attempts/not-a-uuid", undefined, cookie)).status).toBe(404);
+    });
+
+    it("replaces every attempt with an imported transcript", async () => {
+      const { cookie } = await newStudent();
+      await call("POST", "/student/attempts", { code: "CS 1303", term: { season: "Fall", year: 2024 }, result: "B" }, cookie);
+
+      const res = await call(
+        "PUT",
+        "/student/attempts",
+        {
+          attempts: [
+            cs1073,
+            { code: "TME 5386", term: { season: "Winter", year: 2025 }, result: "IP", creditHours: 3, title: "ENTREPRENEURIAL RESILIENCE" },
+          ],
+        },
+        cookie,
+      );
+      expect(res.status).toBe(200);
+      expect(res.body.student.attempts.map((a: { code: string }) => a.code)).toEqual(["CS 1073", "TME 5386"]);
+    });
+
+    it("keeps the old attempts when an import is rejected", async () => {
+      const { cookie } = await newStudent();
+      await call("POST", "/student/attempts", { code: "CS 1303", term: { season: "Fall", year: 2024 }, result: "B" }, cookie);
+
+      const res = await call("PUT", "/student/attempts", { attempts: [{ ...cs1073, code: "ABC 1234" }] }, cookie);
+      expect(res.status).toBe(400);
+      const { body } = await call("GET", "/student", undefined, cookie);
+      expect(body.student.attempts.map((a: { code: string }) => a.code)).toEqual(["CS 1303"]);
+    });
+
+    it("keeps only the latest transcript upload", async () => {
+      const { cookie, identity, student } = await newStudent();
+      const first = sampleTranscript(identity.studentNumber, "Student, First");
+      const second = sampleTranscript(identity.studentNumber, "Student, Second");
+      expect((await upload(cookie, first)).status).toBe(200);
+      expect((await upload(cookie, second)).status).toBe(200);
+
+      const { rows } = await db.query("SELECT file FROM transcripts WHERE student_id = $1", [student.id]);
+      expect(rows.map((r) => Buffer.compare(r.file, second))).toEqual([0]);
+    });
+
+    it("rejects transcripts that aren't PDFs or are too large", async () => {
+      const { cookie } = await newStudent();
+      expect((await upload(cookie, Buffer.from("not a pdf"))).status).toBe(400);
+      expect((await upload(cookie, Buffer.concat([Buffer.from("%PDF-"), Buffer.alloc(6 * 1024 * 1024)]))).status).toBe(413);
+    });
+
+    it("audits the student", async () => {
+      const { cookie } = await newStudent();
+      await call("POST", "/student/attempts", cs1073, cookie);
+      const res = await call("GET", "/student/audit", undefined, cookie);
+      expect(res.status).toBe(200);
+      expect(res.body.audit.status).toBe("incomplete");
+      expect(res.body.audit.totals.creditHours.have).toBe(4);
+    });
+  });
 
   it("reports health and the course calendar year", async () => {
     const res = await call("GET", "/health");
@@ -69,132 +342,9 @@ describe.skipIf(!databaseUrl)("API", () => {
     expect((await call("GET", "/courses?limit=500")).status).toBe(400);
   });
 
-  it("creates a student with UNB BCS defaults", async () => {
-    const student = await newStudent(["honours"]);
-    expect(student.program).toEqual({
-      institution: "unb",
-      campus: "fredericton",
-      code: "BCS",
-      entry: { season: "Fall", year: 2024 },
-    });
-    expect(student.designations).toEqual(["honours"]);
-    expect(student.attempts).toEqual([]);
-
-    const fetched = await call("GET", `/students/${student.id}`);
-    expect(fetched.body.student).toEqual(student);
-  });
-
-  it("changes designations", async () => {
-    const student = await newStudent();
-    const res = await call("PATCH", `/students/${student.id}`, { designations: ["cybersecurity"] });
-    expect(res.status).toBe(200);
-    expect(res.body.student.designations).toEqual(["cybersecurity"]);
-  });
-
-  it("adds attempts, normalizing the course code, and returns them in term order", async () => {
-    const student = await newStudent();
-    await call("POST", `/students/${student.id}/attempts`, { code: "cs1083", term: { season: "Winter", year: 2025 }, result: "B" });
-    const first = await call("POST", `/students/${student.id}/attempts`, { code: "CS 1073", term: { season: "Fall", year: 2024 }, result: "A" });
-    expect(first.status).toBe(201);
-    expect(first.body.attempt).toMatchObject({ code: "CS 1073", result: "A", notations: [] });
-
-    const { body } = await call("GET", `/students/${student.id}`);
-    expect(body.student.attempts.map((a: { code: string }) => a.code)).toEqual(["CS 1073", "CS 1083"]);
-  });
-
-  it("needs credit hours for a course that isn't in the current calendar", async () => {
-    const student = await newStudent();
-    const attempt = { code: "ABC 1234", term: { season: "Fall", year: 2024 }, result: "TR" };
-    expect((await call("POST", `/students/${student.id}/attempts`, attempt)).status).toBe(400);
-
-    const withHours = await call("POST", `/students/${student.id}/attempts`, { ...attempt, creditHours: 3, title: "Transfer" });
-    expect(withHours.status).toBe(201);
-    expect(withHours.body.attempt).toMatchObject({ creditHours: 3, title: "Transfer" });
-  });
-
-  it("rejects invalid attempts with details", async () => {
-    const student = await newStudent();
-    const res = await call("POST", `/students/${student.id}/attempts`, { code: "not a code", term: { season: "Spring", year: 2024 }, result: "Z" });
-    expect(res.status).toBe(400);
-    expect(res.body.error.details.map((d: { path: string }) => d.path).sort()).toEqual(["code", "result", "term.season"]);
-  });
-
-  it("deletes an attempt once", async () => {
-    const student = await newStudent();
-    const { body } = await call("POST", `/students/${student.id}/attempts`, { code: "CS 1073", term: { season: "Fall", year: 2024 }, result: "A" });
-    expect((await call("DELETE", `/students/${student.id}/attempts/${body.attempt.id}`)).status).toBe(204);
-    expect((await call("DELETE", `/students/${student.id}/attempts/${body.attempt.id}`)).status).toBe(404);
-  });
-
-  it("replaces every attempt with an imported transcript", async () => {
-    const student = await newStudent();
-    await call("POST", `/students/${student.id}/attempts`, { code: "CS 1303", term: { season: "Fall", year: 2024 }, result: "B" });
-
-    const res = await call("PUT", `/students/${student.id}/attempts`, {
-      attempts: [
-        { code: "CS 1073", term: { season: "Fall", year: 2024 }, result: "A" },
-        { code: "TME 5386", term: { season: "Winter", year: 2025 }, result: "IP", creditHours: 3, title: "ENTREPRENEURIAL RESILIENCE" },
-      ],
-    });
-    expect(res.status).toBe(200);
-    expect(res.body.student.attempts.map((a: { code: string }) => a.code)).toEqual(["CS 1073", "TME 5386"]);
-  });
-
-  it("keeps the old attempts when an import is rejected", async () => {
-    const student = await newStudent();
-    await call("POST", `/students/${student.id}/attempts`, { code: "CS 1303", term: { season: "Fall", year: 2024 }, result: "B" });
-
-    const res = await call("PUT", `/students/${student.id}/attempts`, {
-      attempts: [{ code: "ABC 1234", term: { season: "Fall", year: 2024 }, result: "A" }],
-    });
-    expect(res.status).toBe(400);
-    const { body } = await call("GET", `/students/${student.id}`);
-    expect(body.student.attempts.map((a: { code: string }) => a.code)).toEqual(["CS 1303"]);
-  });
-
-  async function upload(studentId: string, file: Buffer) {
-    const res = await fetch(`${base}/students/${studentId}/transcript`, {
-      method: "PUT",
-      headers: { "content-type": "application/pdf" },
-      body: new Uint8Array(file),
-    });
-    return res.status;
-  }
-
-  it("keeps only the latest transcript upload", async () => {
-    const student = await newStudent();
-    expect(await upload(student.id, Buffer.from("%PDF-1.4 first"))).toBe(204);
-    expect(await upload(student.id, Buffer.from("%PDF-1.4 second"))).toBe(204);
-
-    const { rows } = await db.query("SELECT file FROM transcripts WHERE student_id = $1", [student.id]);
-    expect(rows.map((r) => r.file.toString())).toEqual(["%PDF-1.4 second"]);
-  });
-
-  it("rejects transcripts that aren't PDFs or are too large", async () => {
-    const student = await newStudent();
-    expect(await upload(student.id, Buffer.from("not a pdf"))).toBe(400);
-    expect(await upload(student.id, Buffer.concat([Buffer.from("%PDF-"), Buffer.alloc(6 * 1024 * 1024)]))).toBe(413);
-    expect(await upload("00000000-0000-0000-0000-000000000000", Buffer.from("%PDF-1.4"))).toBe(404);
-  });
-
-  it("audits a student", async () => {
-    const student = await newStudent();
-    await call("POST", `/students/${student.id}/attempts`, { code: "CS 1073", term: { season: "Fall", year: 2024 }, result: "A" });
-    const res = await call("GET", `/students/${student.id}/audit`);
-    expect(res.status).toBe(200);
-    expect(res.body.audit.status).toBe("incomplete");
-    expect(res.body.audit.totals.creditHours.have).toBe(4);
-  });
-
-  it("returns 404 for unknown students and routes", async () => {
-    expect((await call("GET", "/students/00000000-0000-0000-0000-000000000000")).status).toBe(404);
-    expect((await call("GET", "/students/not-a-uuid/audit")).status).toBe(404);
-    expect((await call("POST", "/students/not-a-uuid/attempts", { code: "CS 1073", term: { season: "Fall", year: 2024 }, result: "A" })).status).toBe(404);
+  it("returns 404 for unknown routes and rejects malformed JSON", async () => {
     expect((await call("GET", "/nothing")).status).toBe(404);
-  });
-
-  it("rejects a malformed JSON body", async () => {
-    const res = await call("POST", "/students", "{not json");
+    const res = await call("POST", "/auth/login", "{not json");
     expect(res.status).toBe(400);
     expect(res.body.error.message).toBe("request body is not valid JSON");
   });
