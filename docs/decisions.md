@@ -68,3 +68,14 @@ The import used to keep the PDF in the browser. We now store the latest upload p
 ## 2026-09-22: Accounts with server-side sessions
 
 Students sign up with their UNB email, student number and a password, and the account only exists once the email is confirmed. Logins are server-side sessions in an `httpOnly` cookie rather than JWTs: with one app and one database, a sessions table makes logout and revoking access immediate, which a JWT can't do without a blocklist. The student number is an identifier, not a secret, so it's never used to log in. It only counts once a transcript with the same number verifies it, so typing someone else's number can't lock them out.
+
+## 2026-09-22: Advisor design: local first, free models only for wording
+
+Paid models for the whole conversation would cost $50-150 a month at 10-15 daily users, which the project can't carry. So the model does as little as possible (the approach is borrowed from PromptGod, a friend's prompt-rewriting extension: do the local work first, validate the model's output, retry once with named issues, fail honestly):
+
+1. Understand the question locally: pattern rules pull out course codes, terms and the kind of question; a small local embedding model (added with course search) handles nearest-example matching and off-topic detection. Nothing leaves the server.
+2. Questions the engine can answer exactly (progress, "can I take X", what to take next, course details, CGPA) are answered from the engine with templates. No model, no cost, nothing invented.
+3. Only open-ended questions ("I like ML, what fits?") go to a model, and it gets a short anonymous fact sheet (program, entry year, what's left, candidate courses the student is eligible for), never the name, student number or grades.
+4. The model's answer is checked locally (every course code it mentions must be in the fact sheet, it stays on topic and short). A safe fix or one targeted retry, then an honest fallback that lists the facts.
+
+The model is a chain of free tiers: Groq first (fast, no request logging by default), then Mistral (largest free allowance; training opt-out switched on), then Gemini. Free tiers change terms without notice, so each sits behind the same small interface and is easy to drop. Paid Claude Haiku with a hard monthly cap is the optional last resort.

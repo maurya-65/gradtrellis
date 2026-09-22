@@ -79,6 +79,7 @@ All routes are under `/api`. Errors look like `{ "error": { "message", "details"
 | `GET /student/audit` | Degree audit |
 | `GET /student/eligibility?courses=&term=` | Whether the student meets each course's prerequisites and corequisites for a term (default: the next one) |
 | `GET /student/suggestions?term=` | Required courses the audit still counts as missing whose prerequisites are met, pending or need review for the term (electives from pools aren't suggested) |
+| `POST /student/advisor` | Answer a question (`{ question }`) about the student's degree; returns `{ intent, answer }` |
 
 ## Prerequisites
 
@@ -90,6 +91,15 @@ All routes are under `/api`. Errors look like `{ "error": { "message", "details"
 - Anything else stays text: high school courses, prose, and lists that are ambiguous without brackets (mixing `and` with `or`, or "A or B, C or D" with no closing ", and").
 
 Checking a tree for a term gives `met` (passed before the term), `pending` (only through courses in progress or planned before it), `missing`, or `review` (text decides, or a CR/TR can't show the grade). Corequisites are checked the same way, except that a course taken in the same term counts. A course's status is the worse of the two. 59% of the catalog's prerequisites parse fully (74% of CS, MATH and STAT), and 78% of corequisites.
+
+## Advisor
+
+The design is in `docs/decisions.md` (local first, free models only for wording). Built so far, with no model:
+
+- `src/advisor/understand.ts` reads a question locally: course codes (only real subjects, so "fall 2026" isn't one), the term asked about ("next term", "next fall", "winter 2028"), and the kind of question from ordered pattern rules: CGPA, can I take X, about a course, what to take next, progress, greeting, or unknown.
+- `src/advisor/answer.ts` answers each kind from the engine through `src/planning.ts` (the audit, prerequisite checks and next-term suggestions, shared with the student routes) with plain templates. Nothing is generated, so nothing can be invented. Unknown questions get a list of what the advisor can answer.
+
+Open-ended questions ("I like ML, what fits?") come next: course search by meaning, then the free-model chain writing from an anonymous fact sheet.
 
 ## Accounts
 

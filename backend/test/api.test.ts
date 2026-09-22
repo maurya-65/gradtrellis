@@ -481,6 +481,18 @@ describe.skipIf(!databaseUrl)("API", () => {
       expect(statuses).toEqual([...statuses].sort((a: string, b: string) => ["met", "pending", "review"].indexOf(a) - ["met", "pending", "review"].indexOf(b)));
     });
 
+    it("answers advisor questions from the engine, and needs a question and a profile", async () => {
+      const { cookie } = await newStudent();
+      await call("POST", "/student/attempts", cs1073, cookie);
+
+      const res = await call("POST", "/student/advisor", { question: "can I take cs1073?" }, cookie);
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ intent: "eligibility", answer: "You've already passed CS 1073." });
+
+      expect((await call("POST", "/student/advisor", { question: "  " }, cookie)).status).toBe(400);
+      expect((await call("POST", "/student/advisor", { question: "hi" }, await newUser())).status).toBe(404);
+    });
+
     it("audits the student", async () => {
       const { cookie } = await newStudent();
       await call("POST", "/student/attempts", cs1073, cookie);
