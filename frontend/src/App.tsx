@@ -5,6 +5,7 @@ import { SessionProvider, useSession } from "./hooks/useSession.tsx";
 import { AuditPage } from "./pages/AuditPage.tsx";
 import { ConfirmPage } from "./pages/ConfirmPage.tsx";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage.tsx";
+import { HomePage } from "./pages/HomePage.tsx";
 import { LandingPage } from "./pages/LandingPage.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
 import { ProfilePage } from "./pages/ProfilePage.tsx";
@@ -49,8 +50,7 @@ function Home() {
   if (!user) return <LandingPage />;
   if (user.suspended) return <Navigate to="/profile" replace />;
   if (!student) return <Navigate to="/setup" replace />;
-  // New profiles start by entering courses; returning students see their audit.
-  return <Navigate to={student.attempts.length === 0 ? "/transcript" : "/audit"} replace />;
+  return <Navigate to="/home" replace />;
 }
 
 const router = createBrowserRouter([
@@ -66,6 +66,7 @@ const router = createBrowserRouter([
       { path: "/reset-password", element: <ResetPasswordPage /> },
       { path: "/profile", element: <RequireUser><ProfilePage /></RequireUser> },
       { path: "/transcript", element: <RequireStudent><TranscriptPage /></RequireStudent> },
+      { path: "/home", element: <RequireStudent><HomePage /></RequireStudent> },
       { path: "/audit", element: <RequireStudent><AuditPage /></RequireStudent> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
