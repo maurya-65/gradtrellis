@@ -207,7 +207,8 @@ export const Program = z.object({
   overlays: z.array(Requirement),
   designations: z.array(Designation),
   policies: z.object({
-    failLimit: FailLimitPolicy,
+    // the three-fail rule only appears from the 2022-2023 calendar on
+    failLimit: FailLimitPolicy.optional(),
     load: LoadPolicy,
   }),
   // spots where the calendar is ambiguous and we made a call
