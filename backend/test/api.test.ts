@@ -123,6 +123,32 @@ describe.skipIf(!databaseUrl)("API", () => {
     expect((await call("DELETE", `/students/${student.id}/attempts/${body.attempt.id}`)).status).toBe(404);
   });
 
+  it("replaces every attempt with an imported transcript", async () => {
+    const student = await newStudent();
+    await call("POST", `/students/${student.id}/attempts`, { code: "CS 1303", term: { season: "Fall", year: 2024 }, result: "B" });
+
+    const res = await call("PUT", `/students/${student.id}/attempts`, {
+      attempts: [
+        { code: "CS 1073", term: { season: "Fall", year: 2024 }, result: "A" },
+        { code: "TME 5386", term: { season: "Winter", year: 2025 }, result: "IP", creditHours: 3, title: "ENTREPRENEURIAL RESILIENCE" },
+      ],
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.student.attempts.map((a: { code: string }) => a.code)).toEqual(["CS 1073", "TME 5386"]);
+  });
+
+  it("keeps the old attempts when an import is rejected", async () => {
+    const student = await newStudent();
+    await call("POST", `/students/${student.id}/attempts`, { code: "CS 1303", term: { season: "Fall", year: 2024 }, result: "B" });
+
+    const res = await call("PUT", `/students/${student.id}/attempts`, {
+      attempts: [{ code: "ABC 1234", term: { season: "Fall", year: 2024 }, result: "A" }],
+    });
+    expect(res.status).toBe(400);
+    const { body } = await call("GET", `/students/${student.id}`);
+    expect(body.student.attempts.map((a: { code: string }) => a.code)).toEqual(["CS 1303"]);
+  });
+
   it("audits a student", async () => {
     const student = await newStudent();
     await call("POST", `/students/${student.id}/attempts`, { code: "CS 1073", term: { season: "Fall", year: 2024 }, result: "A" });

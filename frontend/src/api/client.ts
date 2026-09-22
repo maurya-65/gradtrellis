@@ -52,6 +52,9 @@ export const api = {
   addAttempt: (id: string, attempt: Omit<StoredAttempt, "id" | "notations"> & { notations?: Attempt["notations"] }) =>
     request<{ attempt: StoredAttempt }>("POST", `/students/${id}/attempts`, attempt).then((r) => r.attempt),
 
+  replaceAttempts: (id: string, attempts: Array<Omit<StoredAttempt, "id" | "notations">>) =>
+    request<{ student: Student }>("PUT", `/students/${id}/attempts`, { attempts }).then((r) => r.student),
+
   deleteAttempt: (id: string, attemptId: string) => request<void>("DELETE", `/students/${id}/attempts/${attemptId}`),
 
   getAudit: (id: string) => request<{ audit: AuditResult }>("GET", `/students/${id}/audit`).then((r) => r.audit),

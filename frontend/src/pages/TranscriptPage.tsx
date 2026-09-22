@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router";
 import { api, type StoredAttempt } from "../api/client.ts";
 import { AddCourseForm } from "../components/AddCourseForm.tsx";
+import { ImportTranscript } from "../components/ImportTranscript.tsx";
 import { TermTable } from "../components/TermTable.tsx";
 import { compareTerms, termLabel } from "backend/engine/terms";
 import { useStudent } from "../hooks/useStudent.tsx";
@@ -40,6 +41,8 @@ export function TranscriptPage() {
           View degree audit
         </Link>
       </div>
+
+      <ImportTranscript student={student} />
 
       <AddCourseForm student={student} onAdded={refresh} />
 

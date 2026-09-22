@@ -92,6 +92,36 @@ export async function addAttempt(studentId: string, a: Attempt): Promise<StoredA
   return rows[0] ? toAttempt(rows[0]) : null;
 }
 
+// For a transcript import: the new list replaces everything, all or nothing.
+export async function replaceAttempts(studentId: string, attempts: Attempt[]): Promise<Student | null> {
+  if (!UUID.test(studentId)) return null;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const found = await client.query("SELECT 1 FROM students WHERE id = $1 FOR UPDATE", [studentId]);
+    if (!found.rowCount) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+    await client.query("DELETE FROM attempts WHERE student_id = $1", [studentId]);
+    for (const a of attempts) {
+      await client.query(
+        `INSERT INTO attempts (student_id, course_code, term_season, term_year, result, notations, credit_hours, title)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [studentId, a.code, a.term.season, a.term.year, a.result, a.notations, a.creditHours ?? null, a.title ?? null],
+      );
+    }
+    await client.query("UPDATE students SET updated_at = now() WHERE id = $1", [studentId]);
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+  return getStudent(studentId);
+}
+
 export async function deleteAttempt(studentId: string, attemptId: string): Promise<boolean> {
   if (!UUID.test(studentId) || !UUID.test(attemptId)) return false;
   const res = await pool.query("DELETE FROM attempts WHERE id = $1 AND student_id = $2", [attemptId, studentId]);

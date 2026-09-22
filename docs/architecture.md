@@ -65,6 +65,7 @@ All routes are under `/api`. Errors look like `{ "error": { "message", "details"
 | `POST /students` | Create a profile (entry term, designations) |
 | `GET /students/:id`, `PATCH /students/:id` | Read a profile or change its designations |
 | `POST /students/:id/attempts` | Add a transcript line |
+| `PUT /students/:id/attempts` | Replace every transcript line in one transaction (transcript import) |
 | `DELETE /students/:id/attempts/:attemptId` | Remove a transcript line |
 | `GET /students/:id/audit` | Degree audit |
 
@@ -76,7 +77,9 @@ PostgreSQL through `pg` with hand-written SQL. There are two tables, `students` 
 
 ## Frontend
 
-Three pages: setup (entry term, Honours, Cybersecurity), transcript (course search, add and remove attempts, grouped by term) and audit. A small profile control in the header changes the Honours and Cybersecurity choices after setup.
+Three pages: setup (entry term, Honours, Cybersecurity), transcript (course search, add and remove attempts, grouped by term) and audit.
+
+The transcript page can import the unofficial transcript PDF from myUNB. pdf.js reads it in the browser (`src/transcript/pdf.ts`), `src/transcript/parse.ts` picks out term headings and course lines, and the student reviews the result before it replaces their attempts. The PDF itself (name, student number, birth date) never reaches the server. A small profile control in the header changes the Honours and Cybersecurity choices after setup.
 
 ## Tests
 
@@ -84,6 +87,7 @@ Three pages: setup (entry term, Honours, Cybersecurity), transcript (course sear
 - `test/golden`: hand-worked student histories. The expected values come from the calendar, not from running the engine.
 - `test/data.test.ts`: the program file only names courses that exist or are accounted for.
 - `test/api.test.ts`: HTTP routes against a real PostgreSQL database (`TEST_DATABASE_URL`).
+- `frontend/src/transcript/parse.test.ts`: the transcript parser, on a synthetic transcript in the myUNB layout.
 
 ## Milestones
 
