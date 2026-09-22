@@ -3,6 +3,10 @@ import { useNavigate } from "react-router";
 import { api, type Season } from "../api/client.ts";
 import { DesignationFields } from "../components/DesignationFields.tsx";
 import { useSession } from "../hooks/useSession.tsx";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const thisYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 8 }, (_, i) => thisYear - i);
@@ -31,56 +35,71 @@ export function SetupPage() {
     }
   };
 
-  const select = "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/30";
-
   return (
-    <div className="mx-auto max-w-xl">
-      <h1 className="text-2xl font-semibold text-slate-900">Set up your profile</h1>
-      <p className="mt-2 text-slate-700">Your degree requirements come from the calendar of the year you started, so we need that first.</p>
+    <Card className="mx-auto max-w-xl">
+      <CardHeader>
+        <CardTitle className="text-xl">Set up your profile</CardTitle>
+        <CardDescription>Your degree requirements come from the calendar of the year you started, so we need that first.</CardDescription>
+      </CardHeader>
+      <form onSubmit={submit}>
+        <CardContent className="grid gap-8">
+          <fieldset className="grid gap-3">
+            <legend className="mb-3 text-sm font-medium">When did you start the BCS program?</legend>
+            <div className="flex gap-3">
+              <div className="grid gap-2">
+                <Label htmlFor="entry-season" className="sr-only">
+                  Term
+                </Label>
+                <Select value={season} onValueChange={(v) => setSeason(v as Season)}>
+                  <SelectTrigger id="entry-season" className="h-10 w-36">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ENTRY_SEASONS.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="entry-year" className="sr-only">
+                  Year
+                </Label>
+                <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
+                  <SelectTrigger id="entry-year" className="h-10 w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEARS.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </fieldset>
 
-      <form onSubmit={submit} className="mt-8 space-y-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <fieldset>
-          <legend className="text-sm font-medium text-slate-800">When did you start the BCS program?</legend>
-          <div className="mt-2 flex gap-3">
-            <label className="sr-only" htmlFor="entry-season">
-              Term
-            </label>
-            <select id="entry-season" className={select} value={season} onChange={(e) => setSeason(e.target.value as Season)}>
-              {ENTRY_SEASONS.map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
-            <label className="sr-only" htmlFor="entry-year">
-              Year
-            </label>
-            <select id="entry-year" className={select} value={year} onChange={(e) => setYear(Number(e.target.value))}>
-              {YEARS.map((y) => (
-                <option key={y}>{y}</option>
-              ))}
-            </select>
-          </div>
-          <p className="mt-2 text-xs text-slate-600">Your degree requirements come from the calendar of the year you entered.</p>
-        </fieldset>
+          <fieldset className="grid gap-3">
+            <legend className="mb-3 text-sm font-medium">Aiming for any of these? You can change this later.</legend>
+            <DesignationFields value={designations} onChange={setDesignations} />
+          </fieldset>
 
-        <fieldset className="space-y-2">
-          <legend className="text-sm font-medium text-slate-800">Are you aiming for any of these? (You can change this later.)</legend>
-          <DesignationFields value={designations} onChange={setDesignations} />
-        </fieldset>
-
-        {error && (
-          <p role="alert" className="text-sm text-red-700">
-            {error}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full rounded-md bg-teal-700 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 disabled:opacity-60"
-        >
-          {saving ? "Setting up..." : "Continue"}
-        </button>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+        </CardContent>
+        <CardFooter className="mt-6 border-t pt-6 pb-6">
+          <Button type="submit" disabled={saving} className="h-10 w-full">
+            {saving ? "Setting up..." : "Continue"}
+          </Button>
+        </CardFooter>
       </form>
-    </div>
+    </Card>
   );
 }

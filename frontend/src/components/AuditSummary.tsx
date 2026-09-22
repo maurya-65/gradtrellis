@@ -1,6 +1,10 @@
+import { TriangleAlert } from "lucide-react";
 import type { AuditResult } from "../api/client.ts";
 import { ProgressBar } from "./ProgressBar.tsx";
 import { StatusBadge } from "./StatusBadge.tsx";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 const SUMMARY: Record<AuditResult["status"], string> = {
   complete: "All degree requirements are met.",
@@ -11,31 +15,44 @@ const SUMMARY: Record<AuditResult["status"], string> = {
 };
 
 export function AuditSummary({ audit }: { audit: AuditResult }) {
+  const { have, need } = audit.totals.courses;
+
   return (
-    <header className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-slate-600">
-            {audit.program.name}, {audit.program.calendarYear} calendar
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold text-slate-900">Degree audit</h1>
-          <p className="mt-2 text-slate-700">{SUMMARY[audit.status]}</p>
+    <Card>
+      <CardContent className="grid gap-6 py-2">
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div className="grid gap-2">
+            <p className="text-sm text-muted-foreground">
+              {audit.program.name} · {audit.program.calendarYear} calendar
+            </p>
+            <h1 className="text-3xl font-semibold tracking-tight">
+              {audit.status === "complete" ? "Every requirement met." : `${have} courses down, ${Math.max(0, need - have)} to go.`}
+            </h1>
+            <p className="text-muted-foreground">{SUMMARY[audit.status]}</p>
+          </div>
+          <div className="grid justify-items-end gap-2">
+            <StatusBadge status={audit.status} />
+            <p className="mt-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">CGPA</p>
+            <p className="text-4xl font-semibold tracking-tight text-primary">{audit.cgpa}</p>
+          </div>
         </div>
-        <div className="text-right">
-          <StatusBadge status={audit.status} />
-          <p className="mt-3 text-sm text-slate-600">CGPA</p>
-          <p className="text-3xl font-semibold text-slate-900">{audit.cgpa}</p>
+
+        {!audit.exactCalendar && (
+          <Alert>
+            <TriangleAlert />
+            <AlertDescription>
+              Your entry-year calendar isn&apos;t encoded yet, so this audit uses the {audit.program.calendarYear} calendar. Results may differ.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <Separator />
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <ProgressBar label="Courses" totals={audit.totals.courses} unit="courses" />
+          <ProgressBar label="Credit hours" totals={audit.totals.creditHours} unit="ch" />
         </div>
-      </div>
-      {!audit.exactCalendar && (
-        <p className="mt-4 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
-          Your entry-year calendar isn't encoded yet, so this audit uses the {audit.program.calendarYear} calendar. Results may differ.
-        </p>
-      )}
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <ProgressBar label="Courses" totals={audit.totals.courses} unit="courses" />
-        <ProgressBar label="Credit hours" totals={audit.totals.creditHours} unit="ch" />
-      </div>
-    </header>
+      </CardContent>
+    </Card>
   );
 }

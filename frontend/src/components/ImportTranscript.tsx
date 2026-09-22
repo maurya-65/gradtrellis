@@ -4,7 +4,12 @@ import { api, type Result, type Student } from "../api/client.ts";
 import { useSession } from "../hooks/useSession.tsx";
 import { parseTranscript, type ParsedAttempt } from "backend/transcript";
 import { readPdfLines } from "../transcript/pdf.ts";
-import { resultOptions } from "./terms.ts";
+import { ResultSelect } from "./ResultSelect.tsx";
+import { FileUp, TriangleAlert, X } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // The PDF is parsed in the browser. On save, the file is stored with the profile
 // (replacing any earlier one) and the reviewed courses replace the transcript.
@@ -63,105 +68,104 @@ export function ImportTranscript({ student }: { student: Student }) {
 
   if (!attempts) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Import your transcript</h2>
-        <p className="mt-1 text-sm text-slate-700">
-          Upload the unofficial transcript PDF from myUNB and check the courses before they're saved.
-        </p>
-        <label className="mt-3 inline-block cursor-pointer rounded-md border border-teal-700 px-4 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50">
-          {busy ? "Reading..." : "Choose PDF"}
-          <input type="file" accept="application/pdf,.pdf" className="sr-only" onChange={(e) => void read(e)} disabled={busy} />
-        </label>
+      <Card>
+        <CardHeader>
+          <CardTitle>Import your transcript</CardTitle>
+          <CardDescription>Upload the unofficial transcript PDF from myUNB and check the courses before they&apos;re saved.</CardDescription>
+          <CardAction>
+            <Button asChild variant="outline" className="h-10">
+              <label className={busy ? "pointer-events-none opacity-60" : "cursor-pointer"}>
+                <FileUp />
+                {busy ? "Reading..." : "Choose PDF"}
+                <input type="file" accept="application/pdf,.pdf" className="sr-only" onChange={(e) => void read(e)} disabled={busy} />
+              </label>
+            </Button>
+          </CardAction>
+        </CardHeader>
         {error && (
-          <p role="alert" className="mt-3 text-sm text-red-700">
-            {error}
-          </p>
+          <CardContent>
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          </CardContent>
         )}
-      </div>
+      </Card>
     );
   }
 
   const existing = student.attempts.length;
 
   return (
-    <div className="rounded-lg border border-teal-600 bg-white p-5 shadow-sm">
-      <h2 className="text-base font-semibold text-slate-900">Check your courses</h2>
-      <p className="mt-1 text-sm text-slate-700">
-        Found {attempts.length} courses. Courses without a grade are in progress, or planned if their term hasn't started. Fix anything that looks wrong, then save.
-      </p>
+    <Card className="ring-2 ring-primary/40">
+      <CardHeader>
+        <CardTitle>Check your courses</CardTitle>
+        <CardDescription>
+          Found {attempts.length} courses. Courses without a grade are in progress, or planned if their term hasn&apos;t started. Fix anything that
+          looks wrong, then save.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        {unreadable.length > 0 && (
+          <Alert>
+            <TriangleAlert />
+            <AlertTitle>Some lines couldn&apos;t be read</AlertTitle>
+            <AlertDescription>
+              Add these by hand after saving:
+              <ul className="mt-1 list-inside list-disc font-mono text-xs">
+                {unreadable.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
 
-      {unreadable.length > 0 && (
-        <div role="alert" className="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
-          These lines couldn't be read. Add them by hand after saving:
-          <ul className="mt-1 list-inside list-disc font-mono text-xs">
-            {unreadable.map((line) => (
-              <li key={line}>{line}</li>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Term</TableHead>
+              <TableHead>Course</TableHead>
+              <TableHead>Grade</TableHead>
+              <TableHead>
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {attempts.map((a, i) => (
+              <TableRow key={`${termLabel(a.term)} ${a.code}`}>
+                <TableCell className="whitespace-nowrap text-muted-foreground">{termLabel(a.term)}</TableCell>
+                <TableCell>
+                  <span className="font-mono font-medium">{a.code}</span>
+                  <span className="ml-2 text-muted-foreground">{a.title}</span>
+                </TableCell>
+                <TableCell className="w-44">
+                  <ResultSelect term={a.term} value={a.result} onChange={(r) => setResult(i, r)} aria-label={`Grade for ${a.code} ${termLabel(a.term)}`} className="w-full" />
+                </TableCell>
+                <TableCell className="w-12 text-right">
+                  <Button variant="ghost" size="icon-sm" onClick={() => remove(i)} aria-label={`Leave out ${a.code} ${termLabel(a.term)}`}>
+                    <X className="text-muted-foreground" />
+                  </Button>
+                </TableCell>
+              </TableRow>
             ))}
-          </ul>
-        </div>
-      )}
+          </TableBody>
+        </Table>
 
-      <table className="mt-4 w-full text-sm">
-        <thead className="text-left text-xs uppercase tracking-wide text-slate-600">
-          <tr>
-            <th className="py-2 pr-3 font-semibold">Term</th>
-            <th className="py-2 pr-3 font-semibold">Course</th>
-            <th className="py-2 pr-3 font-semibold">Grade</th>
-            <th className="py-2 font-semibold">
-              <span className="sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {attempts.map((a, i) => (
-            <tr key={`${termLabel(a.term)} ${a.code}`}>
-              <td className="py-2 pr-3 whitespace-nowrap text-slate-700">{termLabel(a.term)}</td>
-              <td className="py-2 pr-3">
-                <span className="font-mono font-medium text-slate-900">{a.code}</span>
-                <span className="ml-2 text-slate-600">{a.title}</span>
-              </td>
-              <td className="py-2 pr-3">
-                <select
-                  aria-label={`Grade for ${a.code} ${termLabel(a.term)}`}
-                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
-                  value={a.result}
-                  onChange={(e) => setResult(i, e.target.value as Result)}
-                >
-                  {resultOptions(a.term).map((r) => (
-                    <option key={r.value} value={r.value}>
-                      {r.label}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td className="py-2 text-right">
-                <button onClick={() => remove(i)} className="text-xs font-medium text-red-700 hover:underline" aria-label={`Leave out ${a.code} ${termLabel(a.term)}`}>
-                  Leave out
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {error && (
-        <p role="alert" className="mt-3 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button
-          onClick={() => void save()}
-          disabled={busy || attempts.length === 0}
-          className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-800 disabled:opacity-50"
-        >
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+      </CardContent>
+      <CardFooter className="gap-3 border-t pt-4 pb-4">
+        <Button onClick={() => void save()} disabled={busy || attempts.length === 0} className="h-10">
           {busy ? "Saving..." : existing > 0 ? `Replace my ${existing} courses with these ${attempts.length}` : `Save ${attempts.length} courses`}
-        </button>
-        <button onClick={() => setAttempts(null)} disabled={busy} className="text-sm font-medium text-slate-700 hover:underline">
+        </Button>
+        <Button variant="ghost" onClick={() => setAttempts(null)} disabled={busy} className="h-10">
           Cancel
-        </button>
-      </div>
-    </div>
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

@@ -6,6 +6,8 @@ import { ImportTranscript } from "../components/ImportTranscript.tsx";
 import { TermTable } from "../components/TermTable.tsx";
 import { compareTerms, termLabel } from "backend/engine/terms";
 import { useSession } from "../hooks/useSession.tsx";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 export function TranscriptPage() {
   const { student, refresh } = useSession();
@@ -37,14 +39,17 @@ export function TranscriptPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Your transcript</h1>
-          <p className="mt-1 text-sm text-slate-700">
-            Add every course you've taken or are taking, including repeats and withdrawals. Started {termLabel(student.program.entry)}.
+          <h1 className="text-3xl font-semibold tracking-tight">Your transcript</h1>
+          <p className="mt-2 text-muted-foreground">
+            Every course you&apos;ve taken, are taking or plan to take, including repeats and withdrawals. Started {termLabel(student.program.entry)}.
           </p>
         </div>
-        <Link to="/audit" className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-800">
-          View degree audit
-        </Link>
+        <Button asChild className="h-10">
+          <Link to="/audit">
+            View degree audit
+            <ArrowRight />
+          </Link>
+        </Button>
       </div>
 
       <ImportTranscript student={student} />
@@ -52,7 +57,7 @@ export function TranscriptPage() {
       <AddCourseForm student={student} onAdded={refresh} />
 
       {byTerm.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-sm text-slate-600">No courses yet. Start with your first term.</p>
+        <p className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">No courses yet. Import your transcript or add your first course.</p>
       ) : (
         <div className="space-y-6">
           {byTerm.map((g) => (

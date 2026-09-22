@@ -1,5 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { api, type CourseSummary } from "../api/client.ts";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface Props {
   onSelect: (course: CourseSummary) => void;
@@ -72,11 +75,9 @@ export function CourseSearch({ onSelect, onUnlisted }: Props) {
   const unlistedCode = results.length === 0 && CODE.exec(query);
 
   return (
-    <div className="relative">
-      <label htmlFor={`${listId}-input`} className="mb-1 block text-sm font-medium text-slate-800">
-        Course
-      </label>
-      <input
+    <div className="relative grid gap-2">
+      <Label htmlFor={`${listId}-input`}>Course</Label>
+      <Input
         id={`${listId}-input`}
         role="combobox"
         aria-expanded={open && results.length > 0}
@@ -93,10 +94,10 @@ export function CourseSearch({ onSelect, onUnlisted }: Props) {
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 120)}
         onKeyDown={onKeyDown}
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/30"
+        className="h-10"
       />
       {open && results.length > 0 && (
-        <ul id={listId} role="listbox" className="absolute z-10 mt-1 max-h-72 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+        <ul id={listId} role="listbox" className="absolute top-full z-30 mt-1 max-h-72 w-full overflow-auto rounded-lg border bg-popover p-1 text-popover-foreground shadow-md">
           {results.map((c, i) => (
             <li
               key={c.code}
@@ -108,17 +109,17 @@ export function CourseSearch({ onSelect, onUnlisted }: Props) {
                 choose(c);
               }}
               onMouseEnter={() => setActive(i)}
-              className={`flex cursor-pointer items-baseline gap-3 px-3 py-2 text-sm ${i === active ? "bg-teal-50" : ""}`}
+              className={cn("flex cursor-pointer items-baseline gap-3 rounded-md px-2.5 py-2 text-sm", i === active && "bg-accent text-accent-foreground")}
             >
-              <span className="w-20 shrink-0 font-mono font-medium text-slate-900">{c.code}</span>
-              <span className="flex-1 text-slate-700">{c.title}</span>
-              <span className="shrink-0 text-xs text-slate-500">{c.creditHours} ch</span>
+              <span className="w-20 shrink-0 font-mono font-medium">{c.code}</span>
+              <span className="flex-1">{c.title}</span>
+              <span className="shrink-0 text-xs text-muted-foreground">{c.creditHours} ch</span>
             </li>
           ))}
         </ul>
       )}
       {unlistedCode && (
-        <p className="mt-1 text-xs text-slate-600">
+        <p className="text-xs text-muted-foreground">
           Not in the current calendar. Press Enter to add {unlistedCode[1]!.toUpperCase()} {unlistedCode[2]} as a retired or transfer course.
         </p>
       )}

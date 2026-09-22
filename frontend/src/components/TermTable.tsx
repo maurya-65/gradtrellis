@@ -1,5 +1,9 @@
+import { Trash2 } from "lucide-react";
 import type { Result, StoredAttempt } from "../api/client.ts";
-import { resultOptions } from "./terms.ts";
+import { ResultSelect } from "./ResultSelect.tsx";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface Props {
   label: string;
@@ -10,53 +14,37 @@ interface Props {
 
 export function TermTable({ label, attempts, onChangeResult, onRemove }: Props) {
   return (
-    <section>
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-600">{label}</h2>
-      <table className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white text-sm shadow-sm">
-        <thead className="sr-only">
-          <tr>
-            <th>Course</th>
-            <th>Grade</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {attempts.map((a) => {
-            const options = resultOptions(a.term);
-            return (
-              <tr key={a.id}>
-                <td className="px-4 py-2.5">
-                  <span className="font-mono font-medium text-slate-900">{a.code}</span>
-                  {a.title && <span className="ml-2 text-slate-600">{a.title}</span>}
-                </td>
-                <td className="px-4 py-2.5 text-right">
-                  {options.length === 1 ? (
-                    <span className="font-medium text-slate-800">{options[0]!.label}</span>
-                  ) : (
-                    <select
-                      aria-label={`Grade for ${a.code} ${label}`}
-                      className="rounded-md border border-transparent bg-transparent px-2 py-1 text-right font-medium text-slate-800 hover:border-slate-300 focus:border-teal-600 focus:outline-none"
-                      value={a.result}
-                      onChange={(e) => onChangeResult(a, e.target.value as Result)}
-                    >
-                      {options.map((r) => (
-                        <option key={r.value} value={r.value}>
-                          {r.label}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </td>
-                <td className="w-20 px-4 py-2.5 text-right">
-                  <button onClick={() => onRemove(a)} className="text-xs font-medium text-red-700 hover:underline" aria-label={`Remove ${a.code} ${label}`}>
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <section className="grid gap-3">
+      <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{label}</h2>
+      <Card className="py-0">
+        <Table>
+          <TableHeader className="sr-only">
+            <TableRow>
+              <TableHead>Course</TableHead>
+              <TableHead>Grade</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {attempts.map((a) => (
+              <TableRow key={a.id}>
+                <TableCell className="py-2.5 pl-4">
+                  <span className="font-mono font-medium">{a.code}</span>
+                  {a.title && <span className="ml-2 text-muted-foreground">{a.title}</span>}
+                </TableCell>
+                <TableCell className="w-44 py-2.5">
+                  <ResultSelect term={a.term} value={a.result} onChange={(r) => onChangeResult(a, r)} aria-label={`Grade for ${a.code} ${label}`} className="w-full" />
+                </TableCell>
+                <TableCell className="w-12 py-2.5 pr-4 text-right">
+                  <Button variant="ghost" size="icon-sm" onClick={() => onRemove(a)} aria-label={`Remove ${a.code} ${label}`}>
+                    <Trash2 className="text-muted-foreground" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
     </section>
   );
 }

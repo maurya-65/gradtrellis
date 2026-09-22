@@ -1,20 +1,43 @@
 import type { AuditResult } from "../api/client.ts";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type Status = AuditResult["status"];
+type CourseState = AuditResult["requirements"][number]["used"][number]["state"];
 
-const STYLES: Record<Status, { label: string; className: string }> = {
-  complete: { label: "Complete", className: "bg-emerald-100 text-emerald-800 ring-emerald-600/20" },
-  "in-progress": { label: "In progress", className: "bg-sky-100 text-sky-800 ring-sky-600/20" },
-  planned: { label: "Planned", className: "bg-violet-100 text-violet-800 ring-violet-600/20" },
-  review: { label: "Needs review", className: "bg-amber-100 text-amber-900 ring-amber-600/30" },
-  incomplete: { label: "Incomplete", className: "bg-slate-100 text-slate-700 ring-slate-500/20" },
+// Status colours come from the theme (index.css). The text stays dark and a coloured dot
+// carries the status, so every label is readable.
+export const STATUS_DOT: Record<Status, string> = {
+  complete: "bg-complete",
+  "in-progress": "bg-in-progress",
+  planned: "bg-planned",
+  review: "bg-review",
+  incomplete: "bg-muted-foreground/30",
 };
 
+export const STATE_DOT: Record<CourseState, string> = {
+  completed: "bg-complete",
+  "in-progress": "bg-in-progress",
+  planned: "bg-planned",
+};
+
+const LABELS: Record<Status, string> = {
+  complete: "Complete",
+  "in-progress": "In progress",
+  planned: "Planned",
+  review: "Needs review",
+  incomplete: "Incomplete",
+};
+
+export function StatusDot({ className }: { className: string }) {
+  return <span aria-hidden className={cn("size-2 shrink-0 rounded-full", className)} />;
+}
+
 export function StatusBadge({ status }: { status: Status }) {
-  const s = STYLES[status];
   return (
-    <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${s.className}`}>
-      {s.label}
-    </span>
+    <Badge variant="outline" className="gap-1.5 bg-card">
+      <StatusDot className={STATUS_DOT[status]} />
+      {LABELS[status]}
+    </Badge>
   );
 }

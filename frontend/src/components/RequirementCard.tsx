@@ -1,31 +1,23 @@
+import { CircleCheck, Circle } from "lucide-react";
 import type { AuditResult } from "../api/client.ts";
-import { StatusBadge } from "./StatusBadge.tsx";
+import { STATE_DOT, STATUS_DOT, StatusBadge, StatusDot } from "./StatusBadge.tsx";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type Requirement = AuditResult["requirements"][number];
 type Status = Requirement["status"];
+type CourseState = Requirement["used"][number]["state"];
 
-const DOT: Record<Status, string> = {
-  complete: "bg-teal-700",
-  "in-progress": "bg-sky-400",
-  planned: "bg-violet-300",
-  review: "bg-amber-500",
-  incomplete: "bg-slate-300",
-};
+const STATE_LABEL: Record<CourseState, string | null> = { completed: null, "in-progress": "in progress", planned: "planned" };
 
-const CHIP: Record<Requirement["used"][number]["state"], string> = {
-  completed: "border-teal-700/20 bg-teal-50 text-teal-900",
-  "in-progress": "border-dashed border-sky-600/60 bg-sky-50 text-sky-900",
-  planned: "border-dashed border-violet-600/50 bg-violet-50 text-violet-900",
-};
-
-function CourseChip({ code, state, note }: { code: string; state: Requirement["used"][number]["state"]; note?: string | undefined }) {
+function CourseChip({ code, state, note }: { code: string; state: CourseState; note?: string | undefined }) {
   return (
-    <span title={note} className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-xs ${CHIP[state]}`}>
+    <Badge variant="outline" title={note} className={cn("h-7 gap-1.5 bg-card px-2.5 font-mono", state !== "completed" && "border-dashed")}>
+      <StatusDot className={STATE_DOT[state]} />
       {code}
-      {state !== "completed" && (
-        <span className="ml-1 font-sans text-[10px] uppercase tracking-wide opacity-80">{state === "planned" ? "planned" : "in progress"}</span>
-      )}
-    </span>
+      {STATE_LABEL[state] && <span className="font-sans text-muted-foreground">{STATE_LABEL[state]}</span>}
+    </Badge>
   );
 }
 
@@ -33,20 +25,19 @@ function CourseChip({ code, state, note }: { code: string; state: Requirement["u
 // are marked "beyond the minimum" above.
 function RuleRow({ title, have, need, detail }: { title: string; have: number; need: number; detail?: string }) {
   const met = have >= need;
+  const Icon = met ? CircleCheck : Circle;
   return (
-    <li>
+    <li className="grid gap-0.5">
       <div className="flex items-center justify-between gap-3">
-        <span className="flex items-center gap-2 text-slate-700">
-          <span aria-hidden className={met ? "text-teal-700" : "text-slate-400"}>
-            {met ? "✓" : "○"}
-          </span>
+        <span className="flex items-center gap-2">
+          <Icon className={cn("size-4", met ? "text-complete" : "text-muted-foreground/50")} aria-hidden />
           {title}
         </span>
-        <span className={met ? "font-medium text-teal-800" : "text-slate-600"}>
+        <span className={cn("tabular-nums", met ? "font-medium text-complete" : "text-muted-foreground")}>
           {Math.min(have, need)} of {need}
         </span>
       </div>
-      {detail && <p className="ml-6 text-xs text-slate-500">{detail}</p>}
+      {detail && <p className="ml-6 text-xs text-muted-foreground">{detail}</p>}
     </li>
   );
 }
@@ -74,20 +65,20 @@ function asRow(r: Requirement): Row | null {
   return null;
 }
 
+const ROW_NOTE: Partial<Record<Status, string>> = { review: "needs review", "in-progress": "in progress", planned: "planned" };
+
 function Checklist({ rows }: { rows: Row[] }) {
   return (
-    <ul className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+    <ul className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
       {rows.map((row) => (
-        <li key={row.id} className="flex items-baseline gap-2 text-sm">
-          <span aria-hidden className={`h-2 w-2 shrink-0 translate-y-[-1px] rounded-full ${DOT[row.status]}`} />
+        <li key={row.id} className="flex items-baseline gap-2">
+          <StatusDot className={cn("translate-y-[-1px]", STATUS_DOT[row.status])} />
           <span className="sr-only">{row.status}:</span>
-          {row.label && <span className="text-slate-700">{row.label}:</span>}
-          <span className="font-mono text-slate-900">{row.code}</span>
-          {row.alternatives && row.status !== "complete" && <span className="text-xs text-slate-500">or {row.alternatives}</span>}
-          {row.note && <span className="text-xs text-slate-600">{row.note}</span>}
-          {row.status === "review" && <span className="text-xs text-amber-800">needs review</span>}
-          {row.status === "in-progress" && <span className="text-xs text-sky-700">in progress</span>}
-          {row.status === "planned" && <span className="text-xs text-violet-700">planned</span>}
+          {row.label && <span className="text-muted-foreground">{row.label}:</span>}
+          <span className={cn("font-mono", row.status === "incomplete" && "text-muted-foreground")}>{row.code}</span>
+          {row.alternatives && row.status !== "complete" && <span className="text-xs text-muted-foreground">or {row.alternatives}</span>}
+          {row.note && <span className="text-xs text-muted-foreground">{row.note}</span>}
+          {ROW_NOTE[row.status] && <span className="text-xs text-muted-foreground">{ROW_NOTE[row.status]}</span>}
         </li>
       ))}
     </ul>
@@ -103,7 +94,7 @@ function Body({ req, depth }: { req: Requirement; depth: number }) {
   return (
     <>
       {req.kind === "pool" && (req.used.length > 0 || (req.surplus?.length ?? 0) > 0) && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {req.used.map((u) => (
             <CourseChip key={u.code} code={u.code} state={u.state} note={u.note} />
           ))}
@@ -114,7 +105,7 @@ function Body({ req, depth }: { req: Requirement; depth: number }) {
       )}
 
       {((req.progress?.length ?? 0) > 0 || (req.constraints?.length ?? 0) > 0) && (
-        <ul className="mt-3 space-y-2 text-sm">
+        <ul className="grid gap-2.5">
           {req.progress?.map((p) => (
             // the pool's own minimums: a running count like 8 of 10 courses
             <RuleRow key={p.unit} title={p.unit === "courses" ? "Courses" : "Credit hours"} have={p.have} need={p.need} />
@@ -132,7 +123,7 @@ function Body({ req, depth }: { req: Requirement; depth: number }) {
       )}
 
       {req.couldCountWithApproval && (
-        <p className="mt-3 text-sm text-amber-900">
+        <p className="text-muted-foreground">
           Could count with approval ({req.couldCountWithApproval[0]!.by}): {req.couldCountWithApproval.map((c) => c.code).join(", ")}
         </p>
       )}
@@ -140,7 +131,7 @@ function Body({ req, depth }: { req: Requirement; depth: number }) {
       {rows.length > 0 && <Checklist rows={rows} />}
 
       {nested.length > 0 && (
-        <div className="mt-4 space-y-4">
+        <div className="grid gap-5">
           {nested.map((c) => (
             <RequirementCard key={c.id} req={c} depth={depth + 1} />
           ))}
@@ -150,37 +141,59 @@ function Body({ req, depth }: { req: Requirement; depth: number }) {
   );
 }
 
-export function RequirementCard({ req, depth = 0 }: { req: Requirement; depth?: number }) {
+function Details({ req, depth }: { req: Requirement; depth: number }) {
   const notes = req.notes.filter((n) => !n.startsWith("alternatively: "));
-  const option = req.kind === "oneOf" ? req.chosenOption : undefined;
-
   return (
-    <section className={depth === 0 ? "rounded-lg border border-slate-200 bg-white p-5 shadow-sm" : "border-t border-slate-100 pt-4"}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className={depth === 0 ? "text-base font-semibold text-slate-900" : "text-sm font-semibold text-slate-800"}>{req.title}</h3>
-          {option && <p className="text-xs text-slate-600">Closest option: {option}</p>}
-        </div>
-        <StatusBadge status={req.status} />
-      </div>
-
-      {req.remaining && req.status !== "complete" && <p className="mt-2 text-sm text-slate-700">{req.remaining}</p>}
-
+    <>
+      {req.remaining && req.status !== "complete" && <p>{req.remaining}</p>}
       <Body req={req} depth={depth} />
-
       {notes.length > 0 && (
-        <ul className="mt-3 space-y-1 text-xs text-slate-600">
+        <ul className="grid gap-1 text-xs text-muted-foreground">
           {notes.map((n) => (
             <li key={n}>{n}</li>
           ))}
         </ul>
       )}
+    </>
+  );
+}
 
-      {depth === 0 && req.source?.page && (
-        <p className="mt-3 text-xs text-slate-500">
-          Calendar: {req.source.section ? `${req.source.section}, ` : ""}p. {req.source.page}
-        </p>
-      )}
-    </section>
+// Top-level requirements are cards; the ones nested inside (Math Option A/B parts, ...) are sections.
+export function RequirementCard({ req, depth = 0 }: { req: Requirement; depth?: number }) {
+  const option = req.kind === "oneOf" ? req.chosenOption : undefined;
+
+  if (depth > 0) {
+    return (
+      <section className="grid gap-3 border-t pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h4 className="font-medium">{req.title}</h4>
+            {option && <p className="text-xs text-muted-foreground">Closest option: {option}</p>}
+          </div>
+          <StatusBadge status={req.status} />
+        </div>
+        <Details req={req} depth={depth} />
+      </section>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{req.title}</CardTitle>
+        {option && <CardDescription>Closest option: {option}</CardDescription>}
+        <CardAction>
+          <StatusBadge status={req.status} />
+        </CardAction>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <Details req={req} depth={depth} />
+        {req.source?.page && (
+          <p className="text-xs text-muted-foreground">
+            Calendar: {req.source.section ? `${req.source.section}, ` : ""}p. {req.source.page}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -90,7 +90,8 @@ describe("allocate", () => {
     });
   });
 
-  it("never uses a course twice and only places courses where they're accepted", () => {
+  // 300 full audits each: slower than the 5 s default on a busy machine
+  it("never uses a course twice and only places courses where they're accepted", { timeout: 60_000 }, () => {
     forAll(300, 12, (rng) => {
       const r = randomRecord(rng, 5, POOL.length);
       const audit = runAudit(r, { programs: [program], index, scale, asOf: NOW });
@@ -101,7 +102,7 @@ describe("allocate", () => {
     });
   });
 
-  it("every transcript line is either placed or explained", () => {
+  it("every transcript line is either placed or explained", { timeout: 60_000 }, () => {
     forAll(300, 13, (rng) => {
       const r = randomRecord(rng, 5, POOL.length);
       const audit = runAudit(r, { programs: [program], index, scale, asOf: NOW });

@@ -7,6 +7,8 @@ import { NotCountedTable } from "../components/NotCountedTable.tsx";
 import { RequirementCard } from "../components/RequirementCard.tsx";
 import { StatusBadge } from "../components/StatusBadge.tsx";
 import { useSession } from "../hooks/useSession.tsx";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function AuditPage() {
   const { student } = useSession();
@@ -25,16 +27,30 @@ export function AuditPage() {
     };
   }, [student]);
 
-  if (error) return <p role="alert" className="text-red-700">{error}</p>;
-  if (!audit) return <p className="text-slate-600">Running your audit...</p>;
+  if (error)
+    return (
+      <p role="alert" className="text-destructive">
+        {error}
+      </p>
+    );
+  if (!audit)
+    return (
+      <div className="grid gap-4" aria-label="Running your audit">
+        <Skeleton className="h-56 rounded-xl" />
+        <Skeleton className="h-40 rounded-xl" />
+        <Skeleton className="h-40 rounded-xl" />
+      </div>
+    );
 
   return (
-    <div className="space-y-8">
-      <AuditSummary audit={audit} />
-      <AuditWarnings warnings={audit.warnings} />
+    <div className="grid gap-10">
+      <div className="grid gap-4">
+        <AuditSummary audit={audit} />
+        <AuditWarnings warnings={audit.warnings} />
+      </div>
 
-      <section aria-labelledby="reqs" className="space-y-4">
-        <h2 id="reqs" className="text-lg font-semibold text-slate-900">
+      <section aria-labelledby="reqs" className="grid gap-4">
+        <h2 id="reqs" className="text-xl font-semibold tracking-tight">
           Requirements
         </h2>
         {[...audit.requirements, ...audit.overlays].map((r) => (
@@ -43,47 +59,57 @@ export function AuditPage() {
       </section>
 
       {audit.designations.length > 0 && (
-        <section aria-labelledby="designations" className="space-y-4">
-          <h2 id="designations" className="text-lg font-semibold text-slate-900">
+        <section aria-labelledby="designations" className="grid gap-4">
+          <h2 id="designations" className="text-xl font-semibold tracking-tight">
             Honours and specializations
           </h2>
           {audit.designations.map((d) => (
-            <div key={d.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-base font-semibold text-slate-900">
+            <Card key={d.id}>
+              <CardHeader>
+                <CardTitle className="text-base">
                   {d.name}
-                  {d.tier && <span className="ml-2 text-sm font-normal text-teal-800">{d.tier}</span>}
-                </h3>
-                <StatusBadge status={d.status} />
-              </div>
-              <div className="mt-4 space-y-4">
+                  {d.tier && <span className="ml-2 font-normal text-primary">{d.tier}</span>}
+                </CardTitle>
+                <CardAction>
+                  <StatusBadge status={d.status} />
+                </CardAction>
+              </CardHeader>
+              <CardContent className="grid gap-5">
                 {d.requirements.map((r) => (
                   <RequirementCard key={r.id} req={r} depth={1} />
                 ))}
-              </div>
-              {d.notes.map((n) => (
-                <p key={n} className="mt-3 text-sm text-amber-900">
-                  {n}
-                </p>
-              ))}
-            </div>
+                {d.notes.map((n) => (
+                  <p key={n} className="text-muted-foreground">
+                    {n}
+                  </p>
+                ))}
+              </CardContent>
+            </Card>
           ))}
         </section>
       )}
 
       <NotCountedTable courses={audit.notCounted} />
 
-      <details className="rounded-lg border border-slate-200 bg-white p-5 text-sm shadow-sm">
-        <summary className="cursor-pointer font-medium text-slate-900">How GradTrellis reads the calendar ({audit.interpretations.length})</summary>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-700">
-          {audit.interpretations.map((i) => (
-            <li key={i.note}>{i.note}</li>
-          ))}
-        </ul>
-      </details>
+      <Card>
+        <CardContent>
+          <details>
+            <summary className="cursor-pointer font-medium">How GradTrellis reads the calendar ({audit.interpretations.length})</summary>
+            <ul className="mt-3 grid list-disc gap-2 pl-5 text-muted-foreground">
+              {audit.interpretations.map((i) => (
+                <li key={i.note}>{i.note}</li>
+              ))}
+            </ul>
+          </details>
+        </CardContent>
+      </Card>
 
-      <p className="text-sm text-slate-600">
-        Missing something? <Link to="/transcript" className="font-medium text-teal-800 hover:underline">Update your transcript</Link>.
+      <p className="text-sm text-muted-foreground">
+        Missing something?{" "}
+        <Link to="/transcript" className="font-medium text-primary hover:underline">
+          Update your transcript
+        </Link>
+        .
       </p>
     </div>
   );

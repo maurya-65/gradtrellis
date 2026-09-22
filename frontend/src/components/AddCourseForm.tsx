@@ -1,8 +1,15 @@
 import { useMemo, useState, type FormEvent } from "react";
+import { Plus, X } from "lucide-react";
+import { compareTerms, termLabel, termOn } from "backend/engine/terms";
 import { api, ApiError, type CourseSummary, type Result, type Season, type Student } from "../api/client.ts";
 import { CourseSearch } from "./CourseSearch.tsx";
-import { compareTerms, termLabel, termOn } from "backend/engine/terms";
-import { defaultResult, resultOptions, termOptions } from "./terms.ts";
+import { ResultSelect } from "./ResultSelect.tsx";
+import { defaultResult, termOptions } from "./terms.ts";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Selected = { code: string; title?: string; creditHours?: number; listed: boolean };
 
@@ -28,7 +35,7 @@ export function AddCourseForm({ student, onAdded }: Props) {
   const [season, year] = chosenTerm.split(" ") as [Season, string];
   const chosen = { season, year: Number(year) };
   const effectiveResult = result ?? defaultResult(chosen);
-  const options = resultOptions(chosen);
+  const needsHours = selected !== null && !selected.listed;
 
   const add = async (e: FormEvent) => {
     e.preventDefault();
@@ -53,96 +60,82 @@ export function AddCourseForm({ student, onAdded }: Props) {
     }
   };
 
-  const field = "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/30";
-  const needsHours = selected && !selected.listed;
-
   return (
-    <form onSubmit={add} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-base font-semibold text-slate-900">Add a course</h2>
-      <div className="mt-4 grid gap-4 md:grid-cols-[2fr_1fr_1fr_auto] md:items-end">
-        {selected ? (
-          <div>
-            <span className="mb-1 block text-sm font-medium text-slate-800">Course</span>
-            <div className="flex items-center justify-between rounded-md border border-teal-600 bg-teal-50 px-3 py-2 text-sm">
-              <span>
-                <span className="font-mono font-medium">{selected.code}</span>
-                {selected.title && <span className="ml-2 text-slate-700">{selected.title}</span>}
-              </span>
-              <button type="button" onClick={() => setSelected(null)} className="text-xs font-medium text-teal-800 hover:underline">
-                Change
-              </button>
-            </div>
-          </div>
-        ) : (
-          <CourseSearch
-            onSelect={(c: CourseSummary) => setSelected({ code: c.code, title: c.title, creditHours: c.creditHours, listed: true })}
-            onUnlisted={(code) => setSelected({ code, listed: false })}
-          />
-        )}
-
-        <div>
-          <label htmlFor="term" className="mb-1 block text-sm font-medium text-slate-800">
-            Term
-          </label>
-          <select id="term" className={`w-full ${field}`} value={chosenTerm} onChange={(e) => {
-              setTerm(e.target.value);
-              setResult(null);
-            }}>
-            {terms.map((t) => (
-              <option key={termLabel(t)}>{termLabel(t)}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="result" className="mb-1 block text-sm font-medium text-slate-800">
-            Grade
-          </label>
-          <select
-            id="result"
-            className={`w-full ${field}`}
-            value={effectiveResult ?? ""}
-            disabled={options.length === 1}
-            required
-            onChange={(e) => setResult(e.target.value as Result)}
-          >
-            {!effectiveResult && (
-              <option value="" disabled>
-                Choose a grade
-              </option>
+    <Card>
+      <CardHeader>
+        <CardTitle>Add a course</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={add} className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+            {selected ? (
+              <div className="grid gap-2">
+                <Label>Course</Label>
+                <div className="flex h-10 items-center justify-between gap-2 rounded-lg border border-primary/40 bg-accent px-3 text-sm">
+                  <span className="truncate">
+                    <span className="font-mono font-medium">{selected.code}</span>
+                    {selected.title && <span className="ml-2 text-muted-foreground">{selected.title}</span>}
+                  </span>
+                  <Button type="button" variant="ghost" size="icon-xs" onClick={() => setSelected(null)} aria-label="Choose a different course">
+                    <X />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <CourseSearch
+                onSelect={(c: CourseSummary) => setSelected({ code: c.code, title: c.title, creditHours: c.creditHours, listed: true })}
+                onUnlisted={(code) => setSelected({ code, listed: false })}
+              />
             )}
-            {options.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </div>
 
-        <button
-          type="submit"
-          disabled={!selected || !effectiveResult || busy || (needsHours ? !creditHours : false)}
-          className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-800 disabled:opacity-50"
-        >
-          Add
-        </button>
-      </div>
+            <div className="grid gap-2">
+              <Label htmlFor="term">Term</Label>
+              <Select
+                value={chosenTerm}
+                onValueChange={(v) => {
+                  setTerm(v);
+                  setResult(null);
+                }}
+              >
+                <SelectTrigger id="term" className="h-10 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {terms.map((t) => (
+                    <SelectItem key={termLabel(t)} value={termLabel(t)}>
+                      {termLabel(t)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-      {needsHours && (
-        <div className="mt-4 max-w-xs">
-          <label htmlFor="ch" className="mb-1 block text-sm font-medium text-slate-800">
-            Credit hours for {selected.code}
-          </label>
-          <input id="ch" type="number" min={0} max={12} step={0.5} className={`w-full ${field}`} value={creditHours} onChange={(e) => setCreditHours(e.target.value)} />
-          <p className="mt-1 text-xs text-slate-600">This course isn't in the current calendar, so its credit hours come from your transcript.</p>
-        </div>
-      )}
+            <div className="grid gap-2">
+              <Label htmlFor="result">Grade</Label>
+              <ResultSelect id="result" term={chosen} value={effectiveResult} onChange={setResult} className="h-10 w-full" />
+            </div>
 
-      {error && (
-        <p role="alert" className="mt-3 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-    </form>
+            <Button type="submit" className="h-10" disabled={!selected || !effectiveResult || busy || (needsHours && !creditHours)}>
+              <Plus />
+              Add
+            </Button>
+          </div>
+
+          {needsHours && (
+            <div className="grid max-w-xs gap-2">
+              <Label htmlFor="ch">Credit hours for {selected.code}</Label>
+              <Input id="ch" type="number" min={0} max={12} step={0.5} className="h-10" value={creditHours} onChange={(e) => setCreditHours(e.target.value)} />
+              <p className="text-xs text-muted-foreground">This course isn&apos;t in the current calendar, so its credit hours come from your transcript.</p>
+            </div>
+          )}
+
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+        </form>
+      </CardContent>
+    </Card>
   );
 }

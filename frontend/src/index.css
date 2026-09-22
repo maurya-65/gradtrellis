@@ -1,1 +1,95 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+/* shadcn components carry dark: styles; this keeps them tied to a .dark class
+   (there is no dark theme yet) instead of the OS setting. */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: "Geist Variable", sans-serif;
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-section: var(--section);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  /* audit statuses, used by badges, chips, progress bars and checklists */
+  --color-complete: var(--complete);
+  --color-in-progress: var(--in-progress);
+  --color-planned: var(--planned);
+  --color-review: var(--review);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Warm off-white and charcoal, with UNB red as the only accent. */
+:root {
+  --background: #f7f6f2;
+  --foreground: #252a2e;
+  --card: #ffffff;
+  --card-foreground: #252a2e;
+  --popover: #ffffff;
+  --popover-foreground: #252a2e;
+  --primary: #ba0c2f;
+  --primary-foreground: #ffffff;
+  --secondary: #f0efeb;
+  --secondary-foreground: #252a2e;
+  --muted: #f0efeb;
+  --muted-foreground: #68757d;
+  --accent: #f0efeb;
+  --accent-foreground: #252a2e;
+  --destructive: #ba0c2f;
+  --border: #e1e4e6;
+  --input: #d5d9dc;
+  --ring: #ba0c2f;
+  --radius: 0.75rem;
+  --brand: #ba0c2f;
+  --brand-soft: #f8e9ed;
+  --section: #f0efeb;
+  --complete: #718f7c;
+  --in-progress: #7899b3;
+  --planned: #68757d;
+  --review: oklch(0.66 0.14 70);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* the climber's idle sway on the trellis */
+@keyframes bob {
+  50% {
+    transform: translateY(-2px);
+  }
+}
