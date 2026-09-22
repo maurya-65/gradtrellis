@@ -11,12 +11,14 @@ import {
   nextTerm,
   normalizeCourseCode,
   parseRequisite,
+  REQUISITE_STATUSES,
   type RequisiteStatus,
   Result,
   runAudit,
   StudentRecord,
   Term,
   termOn,
+  worstRequisite,
 } from "../engine/index.ts";
 import {
   addAttempt,
@@ -241,13 +243,24 @@ function audit(record: StudentRecord) {
   return runAudit(record, { programs, index: courseIndex, scale: gradingScale, asOf: termOn(new Date()) });
 }
 
-// A listed course's prerequisites checked for a term. The calendar's text is parsed; parts
-// it can't read come back as "review" for a person to decide.
-function eligibility(code: CourseCode, attempts: Attempt[], term: Term) {
+// A listed course's prerequisites and corequisites checked for a term; status is the worse of
+// the two. The calendar's text is parsed; parts it can't read come back as "review".
+function eligibility(code: CourseCode, record: StudentRecord, term: Term) {
   const course = courseIndex.get(code)!;
-  const requisite = course.prereqText ? parseRequisite(course.prereqText) : null;
-  const status: RequisiteStatus = requisite ? checkRequisite(requisite, { attempts, term, index: courseIndex, scale: gradingScale }) : "met";
-  return { code, title: course.title, prereqText: course.prereqText, coreqText: course.coreqText, requisite, status };
+  const ctx = { attempts: record.attempts, term, program: record.program.code, index: courseIndex, scale: gradingScale };
+  const prerequisite = course.prereqText ? parseRequisite(course.prereqText) : null;
+  const corequisite = course.coreqText ? parseRequisite(course.coreqText) : null;
+  const prereqStatus: RequisiteStatus = prerequisite ? checkRequisite(prerequisite, ctx) : "met";
+  const coreqStatus: RequisiteStatus = corequisite ? checkRequisite(corequisite, { ...ctx, alongside: true }) : "met";
+  return {
+    code,
+    title: course.title,
+    prereqText: course.prereqText,
+    coreqText: course.coreqText,
+    prerequisite,
+    corequisite,
+    status: worstRequisite([prereqStatus, coreqStatus]),
+  };
 }
 
 studentRouter.get("/audit", async (_req, res) => {
@@ -264,9 +277,9 @@ studentRouter.get("/eligibility", async (req, res) => {
   }
   const id = await ownStudentId(res);
   if (!id) return;
-  const { attempts } = StudentRecord.parse(await getStudent(id));
+  const record = StudentRecord.parse(await getStudent(id));
   const term = query.term ?? nextTerm(termOn(new Date()));
-  res.json({ term, courses: query.courses.map((code) => eligibility(code, attempts, term)) });
+  res.json({ term, courses: query.courses.map((code) => eligibility(code, record, term)) });
 });
 
 // Required courses still missing from the audit that the student could take in the term:
@@ -277,11 +290,10 @@ studentRouter.get("/suggestions", async (req, res) => {
   if (!id) return;
   const record = StudentRecord.parse(await getStudent(id));
   const term = query.term ?? nextTerm(termOn(new Date()));
-  const order: RequisiteStatus[] = ["met", "pending", "review"];
   const courses = neededCourses(audit(record))
     .filter((code) => courseIndex.has(code))
-    .map((code) => eligibility(code, record.attempts, term))
+    .map((code) => eligibility(code, record, term))
     .filter((c) => c.status !== "missing")
-    .sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status) || a.code.localeCompare(b.code));
+    .sort((a, b) => REQUISITE_STATUSES.indexOf(a.status) - REQUISITE_STATUSES.indexOf(b.status) || a.code.localeCompare(b.code));
   res.json({ term, courses });
 });

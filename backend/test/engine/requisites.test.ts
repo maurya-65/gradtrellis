@@ -34,17 +34,69 @@ describe("parseRequisite", () => {
     });
   });
 
+  it("reads grade minimums before and after the course", () => {
+    expect(parseRequisite("STAT 2593 (at least B) or STAT 3093.")).toEqual({
+      type: "any",
+      of: [{ type: "course", code: "STAT 2593", minGrade: "B" }, course("STAT 3093")],
+    });
+    expect(parseRequisite("MATH 1013 or a grade of B or better in MATH 1823.")).toEqual({
+      type: "any",
+      of: [course("MATH 1013"), { type: "course", code: "MATH 1823", minGrade: "B" }],
+    });
+  });
+
+  it("reads cross-listed codes, subject credit hours, program enrolment and equivalents", () => {
+    expect(parseRequisite("MAAC/CCS 2021.")).toEqual({ type: "any", of: [course("MAAC 2021"), course("CCS 2021")] });
+    expect(parseRequisite("12 ch in Mathematics and/or Statistics.")).toEqual({ type: "creditHours", min: 12, subjects: ["MATH", "STAT"] });
+    expect(parseRequisite("Enrolment in the BCS program and 40 ch completed.")).toEqual({
+      type: "all",
+      of: [{ type: "program", code: "BCS" }, { type: "creditHours", min: 40 }],
+    });
+    expect(parseRequisite("ANTH 1002 (or equivalent).")).toEqual({ type: "any", of: [course("ANTH 1002"), { type: "text", text: "an equivalent course" }] });
+  });
+
+  it("reads comma groups when the list ends ', and'", () => {
+    const either = (a: string, b: string): Requisite => ({ type: "any", of: [course(a), course(b)] });
+    expect(parseRequisite("MATH 1013 or MATH 1063, MATH 2203 or CS 1303, and MATH 2213 or MATH 1503.")).toEqual({
+      type: "all",
+      of: [either("MATH 1013", "MATH 1063"), either("MATH 2203", "CS 1303"), either("MATH 2213", "MATH 1503")],
+    });
+  });
+
   it("leaves prose and ambiguous lists as text", () => {
-    expect(parseRequisite("Enrolment in the BCS program and 40 ch completed.").type).toBe("text");
+    expect(parseRequisite("Permission of the instructor.").type).toBe("text");
     expect(parseRequisite("MATH 2203 or CS 1303 and MATH 2213 or MATH 1503.").type).toBe("text");
-    expect(parseRequisite("STAT 2593 (at least B) or STAT 3093.").type).toBe("text");
+    // one list of three, or two groups? no ", and" to settle it
+    expect(parseRequisite("PHYS 1081 or equivalent, MATH 1013 or MATH 1063.").type).toBe("text");
   });
 });
 
 describe("checkRequisite", () => {
   const cs3383 = parseRequisite("CS 2333, CS 2383 and (STAT 2593 or STAT 3083).");
-  const check = (req: Requisite, attempts: Parameters<typeof record>[0], term = W26) =>
-    checkRequisite(req, { attempts: record(attempts).attempts, term, index, scale });
+  const check = (req: Requisite, attempts: Parameters<typeof record>[0], term = W26, alongside = false) =>
+    checkRequisite(req, { attempts: record(attempts).attempts, term, program: "BCS", index, scale, alongside });
+
+  it("checks grade minimums, and can't tell from CR", () => {
+    const atLeastB = parseRequisite("STAT 2593 (at least B).");
+    expect(check(atLeastB, [att("STAT 2593", F25, "B+")])).toBe("met");
+    expect(check(atLeastB, [att("STAT 2593", F25, "C")])).toBe("missing");
+    expect(check(atLeastB, [att("STAT 2593", F25, "CR")])).toBe("review");
+  });
+
+  it("counts credit hours in the named subjects only, and checks the program", () => {
+    const math = parseRequisite("6 ch in Mathematics.");
+    expect(check(math, [att("MATH 1003", F24, "B"), att("CS 1073", F24, "A")])).toBe("missing");
+    expect(check(math, [att("MATH 1003", F24, "B"), att("MATH 1013", W25, "A")])).toBe("met");
+    expect(check({ type: "program", code: "BCS" }, [])).toBe("met");
+    expect(check({ type: "program", code: "BScSwE" }, [])).toBe("missing");
+  });
+
+  it("lets a corequisite be taken in the same term", () => {
+    const cs2263 = parseRequisite("CS 2263.");
+    expect(check(cs2263, [att("CS 2263", W26, "IP")])).toBe("missing");
+    expect(check(cs2263, [att("CS 2263", W26, "IP")], W26, true)).toBe("met");
+    expect(check(cs2263, [att("CS 2263", F25, "IP")], W26, true)).toBe("pending");
+  });
 
   it("is met by passed courses taken before the term", () => {
     expect(check(cs3383, [att("CS 2333", F24, "B"), att("CS 2383", W25, "C"), att("STAT 2593", F25, "A")])).toBe("met");

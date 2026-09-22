@@ -77,12 +77,19 @@ All routes are under `/api`. Errors look like `{ "error": { "message", "details"
 | `PATCH /student/attempts/:attemptId` | Change a transcript line's result (e.g. in progress to a grade) |
 | `DELETE /student/attempts/:attemptId` | Remove a transcript line |
 | `GET /student/audit` | Degree audit |
-| `GET /student/eligibility?courses=&term=` | Whether the student meets each course's prerequisites for a term (default: the next one) |
+| `GET /student/eligibility?courses=&term=` | Whether the student meets each course's prerequisites and corequisites for a term (default: the next one) |
 | `GET /student/suggestions?term=` | Required courses the audit still counts as missing whose prerequisites are met, pending or need review for the term (electives from pools aren't suggested) |
 
 ## Prerequisites
 
-`src/engine/requisites.ts` parses a course's prerequisite text into a tree of courses, credit-hour minimums and `all`/`any` groups. Commas take the list's conjunction; `;` and `, and`/`, or` separate higher-level groups; trailing notes and "(X recommended)" asides are dropped. Anything else (instructor permission, program enrolment, grade minimums, lists mixing `and` and `or` without brackets) stays text. Checking a tree for a term gives `met` (passed before the term), `pending` (only through courses in progress or planned before it), `missing`, or `review` (text decides). About 53% of the catalog's prerequisites parse fully, and 66% of CS, MATH and STAT. Corequisites are kept as raw text.
+`src/engine/requisites.ts` parses a course's prerequisite and corequisite text into a tree: courses (with a grade minimum from "(at least B)" or "a grade of B or higher in X"), cross-listed codes ("MATH 3463/PHYS 3912"), credit-hour minimums (optionally in named subjects: "12 ch in Mathematics and/or Statistics"), program enrolment, and `all`/`any` groups.
+
+- Commas take the list's conjunction ("A, B and C"). `;` separates higher-level groups, and so do commas in a list ending ", and"/", or" (the calendar's "A or B, C or D, and E").
+- Trailing notes ("NOTE: Credit ...") and "(X recommended)" asides are dropped.
+- Instructor or department permission and "or equivalent" stay as review items, so "X or permission of the instructor" is still met by X.
+- Anything else stays text: high school courses, prose, and lists that are ambiguous without brackets (mixing `and` with `or`, or "A or B, C or D" with no closing ", and").
+
+Checking a tree for a term gives `met` (passed before the term), `pending` (only through courses in progress or planned before it), `missing`, or `review` (text decides, or a CR/TR can't show the grade). Corequisites are checked the same way, except that a course taken in the same term counts. A course's status is the worse of the two. 59% of the catalog's prerequisites parse fully (74% of CS, MATH and STAT), and 78% of corequisites.
 
 ## Accounts
 

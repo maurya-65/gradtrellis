@@ -453,8 +453,14 @@ describe.skipIf(!databaseUrl)("API", () => {
       expect(res.body.courses.map((c: { code: string; status: string }) => [c.code, c.status])).toEqual([
         ["CS 1083", "met"],
         ["CS 2043", "pending"],
-        ["CS 2999", "review"],
+        // instructor permission is for review, but its corequisites CS 2263 and CS 2383 are missing
+        ["CS 2999", "missing"],
       ]);
+
+      // CS 2253's corequisite CS 2263 counts when taken in the same term
+      await call("POST", "/student/attempts", { code: "CS 2263", term: { season: "Fall", year: 2025 }, result: "IP" }, cookie);
+      const coreq = await call("GET", `/student/eligibility?courses=${encodeURIComponent("CS 2253")}&term=Fall%202025`, undefined, cookie);
+      expect(coreq.body.courses[0]).toMatchObject({ code: "CS 2253", coreqText: "CS 2263.", status: "met" });
 
       expect((await call("GET", "/student/eligibility?courses=CS%209999", undefined, cookie)).status).toBe(400);
       expect((await call("GET", "/student/eligibility?courses=CS%201083&term=Spring%202025", undefined, cookie)).status).toBe(400);
