@@ -1,0 +1,414 @@
+{
+  "id": "005-complete-honours-cybersecurity",
+  "description": "Projected complete degree (Sept 2024 entry, eight study terms): Honours plus the Cybersecurity specialization, Math Option A, a 6 ch breadth course, a failed-then-passed core course and a credit exclusion.",
+  "provenance": "synthetic",
+  "reviewedBy": [],
+  "record": {
+    "id": "golden-005",
+    "program": {
+      "institution": "unb",
+      "campus": "fredericton",
+      "code": "BCS",
+      "entry": {
+        "season": "Fall",
+        "year": 2024
+      }
+    },
+    "designations": [
+      "honours",
+      "cybersecurity"
+    ],
+    "attempts": [
+      {
+        "code": "CS 1073",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 1303",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "B+"
+      },
+      {
+        "code": "CS 1203",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "A"
+      },
+      {
+        "code": "MATH 1003",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "B+"
+      },
+      {
+        "code": "ECON 1013",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "A-"
+      },
+      {
+        "code": "CS 1083",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 1103",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "A-",
+        "creditHours": 4,
+        "title": "Introduction to Databases"
+      },
+      {
+        "code": "MATH 1013",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "B"
+      },
+      {
+        "code": "MATH 1503",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "A-"
+      },
+      {
+        "code": "ENGL 1000",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "B"
+      },
+      {
+        "code": "CS 2043",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 2263",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 2383",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "A-"
+      },
+      {
+        "code": "CS 2413",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "A"
+      },
+      {
+        "code": "PSYC 1013",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 2253",
+        "term": {
+          "season": "Winter",
+          "year": 2026
+        },
+        "result": "B"
+      },
+      {
+        "code": "CS 2333",
+        "term": {
+          "season": "Winter",
+          "year": 2026
+        },
+        "result": "B+"
+      },
+      {
+        "code": "CS 2613",
+        "term": {
+          "season": "Winter",
+          "year": 2026
+        },
+        "result": "A-"
+      },
+      {
+        "code": "ECON 1023",
+        "term": {
+          "season": "Winter",
+          "year": 2026
+        },
+        "result": "B+"
+      },
+      {
+        "code": "HIST 1001",
+        "term": {
+          "season": "Winter",
+          "year": 2026
+        },
+        "result": "A-"
+      },
+      {
+        "code": "CS 3383",
+        "term": {
+          "season": "Fall",
+          "year": 2026
+        },
+        "result": "F"
+      },
+      {
+        "code": "CS 3413",
+        "term": {
+          "season": "Fall",
+          "year": 2026
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 3873",
+        "term": {
+          "season": "Fall",
+          "year": 2026
+        },
+        "result": "A-"
+      },
+      {
+        "code": "STAT 3083",
+        "term": {
+          "season": "Fall",
+          "year": 2026
+        },
+        "result": "B"
+      },
+      {
+        "code": "ADM 1313",
+        "term": {
+          "season": "Fall",
+          "year": 2026
+        },
+        "result": "B"
+      },
+      {
+        "code": "CS 3383",
+        "term": {
+          "season": "Winter",
+          "year": 2027
+        },
+        "result": "B+"
+      },
+      {
+        "code": "CS 3853",
+        "term": {
+          "season": "Winter",
+          "year": 2027
+        },
+        "result": "B"
+      },
+      {
+        "code": "STAT 3093",
+        "term": {
+          "season": "Winter",
+          "year": 2027
+        },
+        "result": "B+"
+      },
+      {
+        "code": "CS 3997",
+        "term": {
+          "season": "Winter",
+          "year": 2027
+        },
+        "result": "A"
+      },
+      {
+        "code": "ECON 2008",
+        "term": {
+          "season": "Winter",
+          "year": 2027
+        },
+        "result": "B+"
+      },
+      {
+        "code": "CS 4355",
+        "term": {
+          "season": "Fall",
+          "year": 2027
+        },
+        "result": "A-"
+      },
+      {
+        "code": "CS 4411",
+        "term": {
+          "season": "Fall",
+          "year": 2027
+        },
+        "result": "B+"
+      },
+      {
+        "code": "CS 4865",
+        "term": {
+          "season": "Fall",
+          "year": 2027
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 3113",
+        "term": {
+          "season": "Fall",
+          "year": 2027
+        },
+        "result": "B+"
+      },
+      {
+        "code": "HIST 2013",
+        "term": {
+          "season": "Fall",
+          "year": 2027
+        },
+        "result": "A"
+      },
+      {
+        "code": "MATH 2213",
+        "term": {
+          "season": "Fall",
+          "year": 2027
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 4417",
+        "term": {
+          "season": "Winter",
+          "year": 2028
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 4415",
+        "term": {
+          "season": "Winter",
+          "year": 2028
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 4997",
+        "term": {
+          "season": "Winter",
+          "year": 2028
+        },
+        "result": "A"
+      },
+      {
+        "code": "ANTH 2304",
+        "term": {
+          "season": "Winter",
+          "year": 2028
+        },
+        "result": "B"
+      },
+      {
+        "code": "ENGL 2195",
+        "term": {
+          "season": "Winter",
+          "year": 2028
+        },
+        "result": "A-"
+      }
+    ]
+  },
+  "expect": {
+    "cgpa": "3.5",
+    "cgpaWorking": "core 200 pts / 59 ch (CS 3383 F and B+ both count), math+stats 60.9 / 18 (MATH 2213 still in GPA), technical electives 104 / 27, non-CS 113.1 / 33, free CS 36.7 / 10: 514.7 / 147 = 3.501",
+    "warnings": [],
+    "audit": {
+      "status": "complete",
+      "totals": {
+        "courses": {
+          "have": 40,
+          "inProgress": 0
+        },
+        "creditHours": {
+          "have": 140,
+          "inProgress": 0
+        },
+        "working": "39 distinct courses count (41 attempts minus the CS 3383 retake and the excluded MATH 2213); ENGL 1000 is 6 ch so counts as two: 40. Credit hours: core 55, math 15, TE-eligible cybersecurity courses 27, non-CS 33, CS 1203/2613/3113 10 = 140."
+      },
+      "requirements": {
+        "cs-core": {
+          "status": "complete"
+        },
+        "math-core": {
+          "status": "complete"
+        },
+        "statistics": {
+          "status": "complete",
+          "chosenOption": "Option A: STAT 3083 and STAT 3093"
+        },
+        "tech-electives": {
+          "status": "complete"
+        },
+        "breadth": {
+          "status": "complete",
+          "includes": [
+            "ENGL 1000"
+          ]
+        },
+        "free-electives": {
+          "status": "complete"
+        },
+        "writing": {
+          "status": "complete"
+        }
+      },
+      "designations": {
+        "honours": {
+          "status": "complete",
+          "tier": "First Class Honours"
+        },
+        "cybersecurity": {
+          "status": "complete"
+        }
+      },
+      "notCounted": [
+        "CS 3383",
+        "MATH 2213"
+      ],
+      "notes": "Breadth and free electives only both finish if one 3 ch non-CS course goes to free electives: the non-CS courses are 11 weighted courses (33 ch) against breadth's 10, while the three leftover CS courses give free electives only 3 of 4. Checks that the allocator finds that split."
+    }
+  }
+}

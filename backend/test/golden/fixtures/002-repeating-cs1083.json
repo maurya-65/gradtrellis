@@ -1,0 +1,190 @@
+{
+  "id": "002-repeating-cs1083",
+  "description": "Struggling first year: CS 1083 failed then D, now on a third attempt. MATH 1013 D then withdrawn. CGPA under 2.7.",
+  "provenance": "synthetic",
+  "reviewedBy": [],
+  "record": {
+    "id": "golden-002",
+    "program": {
+      "institution": "unb",
+      "campus": "fredericton",
+      "code": "BCS",
+      "entry": {
+        "season": "Fall",
+        "year": 2024
+      }
+    },
+    "attempts": [
+      {
+        "code": "CS 1073",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "C"
+      },
+      {
+        "code": "MATH 1003",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "C+"
+      },
+      {
+        "code": "CS 1303",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "C"
+      },
+      {
+        "code": "ECON 1013",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "B-"
+      },
+      {
+        "code": "CS 1203",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "B"
+      },
+      {
+        "code": "CS 1083",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "F"
+      },
+      {
+        "code": "MATH 1013",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "D"
+      },
+      {
+        "code": "CS 1103",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "C",
+        "creditHours": 4
+      },
+      {
+        "code": "ENGL 1103",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "B"
+      },
+      {
+        "code": "PSYC 1013",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "C+"
+      },
+      {
+        "code": "CS 1083",
+        "term": {
+          "season": "Summer",
+          "year": 2025
+        },
+        "result": "D"
+      },
+      {
+        "code": "CS 1083",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "IP"
+      },
+      {
+        "code": "MATH 1013",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "W"
+      }
+    ]
+  },
+  "expect": {
+    "cgpa": "1.9",
+    "cgpaWorking": "points 8+6.9+8+8.1+9+0+3+8+9+6.9+4 = 70.9 over 38 ch = 1.866 (W and IP excluded)",
+    "warnings": [
+      "fail-limit-near",
+      "max-attempts",
+      "reduced-load"
+    ],
+    "warningNotes": "CS 1083: F and D are 2 of 3 failures; F, D and the current registration are 3 attempts. MATH 1013: D is one failure, and the W doesn't count as one.",
+    "audit": {
+      "status": "incomplete",
+      "totals": {
+        "courses": {
+          "have": 8,
+          "inProgress": 1
+        },
+        "creditHours": {
+          "have": 27,
+          "inProgress": 4
+        }
+      },
+      "requirements": {
+        "cs-core": {
+          "status": "incomplete",
+          "used": [
+            "CS 1073",
+            "CS 1083",
+            "CS 1103",
+            "CS 1303"
+          ]
+        },
+        "calculus-1": {
+          "status": "complete",
+          "used": [
+            "MATH 1003"
+          ]
+        },
+        "calculus-2": {
+          "status": "incomplete",
+          "used": []
+        },
+        "tech-electives": {
+          "status": "incomplete",
+          "used": [
+            "CS 1203"
+          ]
+        },
+        "breadth": {
+          "status": "incomplete",
+          "used": [
+            "ECON 1013",
+            "ENGL 1103",
+            "PSYC 1013"
+          ]
+        }
+      },
+      "notCounted": [
+        "CS 1083",
+        "CS 1083",
+        "MATH 1013",
+        "MATH 1013"
+      ],
+      "notes": "CS 1083 counts once, as the current (third) registration; the F and D are listed as repeats. MATH 1013: D is below C and W doesn't count."
+    }
+  }
+}

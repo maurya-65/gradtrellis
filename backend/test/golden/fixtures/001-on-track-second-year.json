@@ -1,0 +1,225 @@
+{
+  "id": "001-on-track-second-year",
+  "description": "Sept 2024 entrant, clean first year, second-year core in progress. Took CS 1103 before it was renumbered to CS 1543.",
+  "provenance": "synthetic",
+  "reviewedBy": [],
+  "record": {
+    "id": "golden-001",
+    "program": {
+      "institution": "unb",
+      "campus": "fredericton",
+      "code": "BCS",
+      "entry": {
+        "season": "Fall",
+        "year": 2024
+      }
+    },
+    "attempts": [
+      {
+        "code": "CS 1073",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 1303",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "B+"
+      },
+      {
+        "code": "CS 1203",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "A-"
+      },
+      {
+        "code": "MATH 1003",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "B"
+      },
+      {
+        "code": "ECON 1013",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "B"
+      },
+      {
+        "code": "CS 1083",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 1103",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "A-",
+        "creditHours": 4,
+        "title": "Introduction to Databases"
+      },
+      {
+        "code": "MATH 1013",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "B-"
+      },
+      {
+        "code": "MATH 1503",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "B"
+      },
+      {
+        "code": "ENGL 1103",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 2043",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "IP"
+      },
+      {
+        "code": "CS 2253",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "IP"
+      },
+      {
+        "code": "CS 2263",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "IP"
+      },
+      {
+        "code": "CS 2383",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "IP"
+      },
+      {
+        "code": "STAT 2593",
+        "term": {
+          "season": "Fall",
+          "year": 2025
+        },
+        "result": "IP"
+      }
+    ]
+  },
+  "expect": {
+    "cgpa": "3.5",
+    "cgpaWorking": "points 16+13.2+11.1+9+9+16+14.8+8.1+9+12 = 118.2 over 34 ch = 3.476",
+    "warnings": [],
+    "audit": {
+      "status": "incomplete",
+      "totals": {
+        "courses": {
+          "have": 10,
+          "inProgress": 5
+        },
+        "creditHours": {
+          "have": 34,
+          "inProgress": 19
+        }
+      },
+      "requirements": {
+        "cs-core": {
+          "status": "incomplete",
+          "used": [
+            "CS 1073",
+            "CS 1083",
+            "CS 1103",
+            "CS 1303",
+            "CS 2043",
+            "CS 2253",
+            "CS 2263",
+            "CS 2383"
+          ]
+        },
+        "calculus-1": {
+          "status": "complete",
+          "used": [
+            "MATH 1003"
+          ]
+        },
+        "calculus-2": {
+          "status": "complete",
+          "used": [
+            "MATH 1013"
+          ]
+        },
+        "linear-algebra": {
+          "status": "complete",
+          "used": [
+            "MATH 1503"
+          ]
+        },
+        "statistics": {
+          "status": "incomplete",
+          "chosenOption": "Option B: STAT 2593 and one listed elective",
+          "used": [
+            "STAT 2593"
+          ]
+        },
+        "tech-electives": {
+          "status": "incomplete",
+          "used": [
+            "CS 1203"
+          ]
+        },
+        "breadth": {
+          "status": "incomplete",
+          "used": [
+            "ECON 1013",
+            "ENGL 1103"
+          ]
+        },
+        "free-electives": {
+          "status": "incomplete",
+          "used": []
+        },
+        "writing": {
+          "status": "incomplete",
+          "used": [
+            "ENGL 1103"
+          ]
+        }
+      },
+      "notCounted": [],
+      "notes": "CS 1203 (taken in first year, so it counts) is CS and 3 ch, so it fills a technical elective slot before a free elective. STAT 2593 in progress makes Option B the closer statistics option."
+    }
+  }
+}

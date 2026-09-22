@@ -1,0 +1,172 @@
+{
+  "id": "003-exclusions-and-transfer",
+  "description": "Took MATH 2203 instead of CS 1303, CS 1093 (never BCS credit) in first term, and has transfer credit for ENGL 1145.",
+  "provenance": "synthetic",
+  "reviewedBy": [],
+  "record": {
+    "id": "golden-003",
+    "program": {
+      "institution": "unb",
+      "campus": "fredericton",
+      "code": "BCS",
+      "entry": {
+        "season": "Fall",
+        "year": 2024
+      }
+    },
+    "attempts": [
+      {
+        "code": "CS 1073",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "B"
+      },
+      {
+        "code": "MATH 2203",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "A"
+      },
+      {
+        "code": "MATH 1003",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 1093",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "A"
+      },
+      {
+        "code": "ENGL 1145",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "TR",
+        "creditHours": 3
+      },
+      {
+        "code": "CS 1083",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "B+"
+      },
+      {
+        "code": "MATH 1013",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "A-"
+      },
+      {
+        "code": "MATH 1503",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "B"
+      },
+      {
+        "code": "ECON 1023",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "C"
+      },
+      {
+        "code": "PSYC 1013",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "B"
+      },
+      {
+        "code": "HIST 1001",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "B"
+      }
+    ]
+  },
+  "expect": {
+    "cgpa": "3.3",
+    "cgpaWorking": "points 12+12+12+16+13.2+11.1+9+6+9+9 = 109.3 over 33 ch = 3.312 (TR excluded; CS 1093 included: it is still UNB work, just not BCS credit)",
+    "warnings": [],
+    "audit": {
+      "status": "incomplete",
+      "totals": {
+        "courses": {
+          "have": 10,
+          "inProgress": 0
+        },
+        "creditHours": {
+          "have": 32,
+          "inProgress": 0
+        }
+      },
+      "requirements": {
+        "cs-1303": {
+          "status": "review",
+          "used": []
+        },
+        "cs-core": {
+          "status": "incomplete",
+          "used": [
+            "CS 1073",
+            "CS 1083"
+          ]
+        },
+        "calculus-1": {
+          "status": "complete",
+          "used": [
+            "MATH 1003"
+          ]
+        },
+        "breadth": {
+          "status": "incomplete",
+          "used": [
+            "ECON 1023",
+            "ENGL 1145",
+            "HIST 1001",
+            "PSYC 1013"
+          ]
+        },
+        "free-electives": {
+          "status": "incomplete",
+          "used": [
+            "MATH 2203"
+          ]
+        },
+        "writing": {
+          "status": "incomplete",
+          "used": [
+            "ENGL 1145",
+            "HIST 1001"
+          ]
+        }
+      },
+      "notCounted": [
+        "CS 1093"
+      ],
+      "notes": "MATH 2203 excludes CS 1303, but the BCS core doesn't list MATH 2203 as a substitute (the CS minor does), so CS 1303 needs a Faculty decision. Transfer credit ENGL 1145 counts toward breadth and writing. CS 1093 is never BCS credit."
+    }
+  }
+}

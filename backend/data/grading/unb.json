@@ -1,0 +1,67 @@
+{
+  "institution": "unb",
+  "source": {
+    "document": "UNB Undergraduate Calendar 2024-2025, Section B: Grades, Notations, Calculation of Grade Point Averages, Repeating Courses",
+    "url": "https://www.unb.ca/secretariat/_assets/documents/calendar/undergradcalendar-2024-2025.pdf",
+    "page": 35
+  },
+  "notes": [
+    "University-level failures only. BCS also treats D as failing for its 3-fail rule (program policy).",
+    "A current registration (IP/CTN/INC) counts as an attempt so planning warns before a 4th registration."
+  ],
+  "points": {
+    "A+": 4.3,
+    "A": 4,
+    "A-": 3.7,
+    "B+": 3.3,
+    "B": 3,
+    "B-": 2.7,
+    "C+": 2.3,
+    "C": 2,
+    "D": 1,
+    "F": 0,
+    "WF": 0
+  },
+  "minimumCreditGrade": "D",
+  "failingResults": [
+    "F",
+    "WF",
+    "NCR"
+  ],
+  "creditWithoutPoints": [
+    "CR",
+    "AEG",
+    "TR"
+  ],
+  "excludedFromGpa": [
+    "W",
+    "CR",
+    "NCR",
+    "INC",
+    "AEG",
+    "AUD",
+    "CTN",
+    "IP",
+    "TR"
+  ],
+  "countsAsAttempt": [
+    "A+",
+    "A",
+    "A-",
+    "B+",
+    "B",
+    "B-",
+    "C+",
+    "C",
+    "D",
+    "F",
+    "WF",
+    "CR",
+    "NCR",
+    "W",
+    "IP",
+    "CTN",
+    "INC"
+  ],
+  "maxAttempts": 3
+}

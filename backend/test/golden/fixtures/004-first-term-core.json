@@ -1,0 +1,73 @@
+{
+  "id": "004-first-term-core",
+  "description": "First-year core courses only: the CS core is started but incomplete.",
+  "provenance": "synthetic",
+  "reviewedBy": [],
+  "record": {
+    "id": "golden-004",
+    "program": {
+      "institution": "unb",
+      "campus": "fredericton",
+      "code": "BCS",
+      "entry": {
+        "season": "Fall",
+        "year": 2024
+      }
+    },
+    "attempts": [
+      {
+        "code": "CS 1073",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 1303",
+        "term": {
+          "season": "Fall",
+          "year": 2024
+        },
+        "result": "A"
+      },
+      {
+        "code": "CS 1083",
+        "term": {
+          "season": "Winter",
+          "year": 2025
+        },
+        "result": "A"
+      }
+    ]
+  },
+  "expect": {
+    "cgpa": "4.0",
+    "cgpaWorking": "12 ch of A",
+    "warnings": [],
+    "audit": {
+      "status": "incomplete",
+      "totals": {
+        "courses": {
+          "have": 3,
+          "inProgress": 0
+        },
+        "creditHours": {
+          "have": 12,
+          "inProgress": 0
+        }
+      },
+      "requirements": {
+        "cs-core": {
+          "status": "incomplete",
+          "used": [
+            "CS 1073",
+            "CS 1083",
+            "CS 1303"
+          ]
+        }
+      },
+      "notCounted": []
+    }
+  }
+}
