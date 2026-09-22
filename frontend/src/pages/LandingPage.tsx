@@ -112,7 +112,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-foreground">
+      <section className="bg-band">
         <Reveal className="mx-auto flex max-w-6xl flex-col items-center px-4 py-20 text-center text-white">
           <h2 className="text-4xl font-[540] tracking-tight sm:text-5xl">See where your degree stands.</h2>
           <p className="mt-4 text-lg text-white/80">It takes about a minute with your transcript.</p>

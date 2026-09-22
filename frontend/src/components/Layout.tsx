@@ -31,7 +31,7 @@ export function Layout() {
                   <NavButton to="/audit">Degree audit</NavButton>
                 </>
               )}
-              <ProfileMenu user={user} student={student} />
+              <ProfileMenu user={user} />
             </nav>
           ) : (
             <nav aria-label="Account" className="flex items-center gap-2">

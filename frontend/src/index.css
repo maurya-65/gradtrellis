@@ -3,8 +3,7 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
-/* shadcn components carry dark: styles; this keeps them tied to a .dark class
-   (there is no dark theme yet) instead of the OS setting. */
+/* Dark mode follows a .dark class on <html>, set from the appearance setting (lib/theme.ts). */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -13,6 +12,7 @@
   --color-brand: var(--brand);
   --color-brand-soft: var(--brand-soft);
   --color-section: var(--section);
+  --color-band: var(--band);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -69,10 +69,42 @@
   --brand: #ba0c2f;
   --brand-soft: #f8e9ed;
   --section: #f0efeb;
+  /* the landing page's closing band */
+  --band: #252a2e;
   --complete: #718f7c;
   --in-progress: #7899b3;
   --planned: #68757d;
   --review: oklch(0.66 0.14 70);
+}
+
+/* The same charcoal family, darker. The red is lifted a little so white text on it still reads. */
+.dark {
+  --background: #1c1f22;
+  --foreground: #ecebe7;
+  --card: #24282c;
+  --card-foreground: #ecebe7;
+  --popover: #24282c;
+  --popover-foreground: #ecebe7;
+  --primary: #d23a55;
+  --primary-foreground: #ffffff;
+  --secondary: #2c3135;
+  --secondary-foreground: #ecebe7;
+  --muted: #2c3135;
+  --muted-foreground: #9aa4ab;
+  --accent: #2c3135;
+  --accent-foreground: #ecebe7;
+  --destructive: #e0566e;
+  --border: #353b40;
+  --input: #41484e;
+  --ring: #d23a55;
+  --brand: #d23a55;
+  --brand-soft: #3a2228;
+  --section: #212427;
+  --band: #2c3135;
+  --complete: #8fae9a;
+  --in-progress: #93b1c8;
+  --planned: #9aa4ab;
+  color-scheme: dark;
 }
 
 @layer base {

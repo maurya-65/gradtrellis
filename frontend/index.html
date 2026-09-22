@@ -6,6 +6,13 @@
     <meta name="description" content="Degree planning for UNB Fredericton Bachelor of Computer Science students." />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>GradTrellis</title>
+    <!-- set the theme before the first paint so dark mode doesn't flash light (see src/lib/theme.ts) -->
+    <script>
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark" || (theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

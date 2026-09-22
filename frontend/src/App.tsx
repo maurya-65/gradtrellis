@@ -7,6 +7,7 @@ import { ConfirmPage } from "./pages/ConfirmPage.tsx";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage.tsx";
 import { LandingPage } from "./pages/LandingPage.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
+import { ProfilePage } from "./pages/ProfilePage.tsx";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage.tsx";
 import { SetupPage } from "./pages/SetupPage.tsx";
 import { SignupPage } from "./pages/SignupPage.tsx";
@@ -17,6 +18,12 @@ function RequireStudent({ children }: { children: ReactNode }) {
   if (loading) return <p className="text-muted-foreground">Loading...</p>;
   if (error) return <p role="alert" className="text-destructive">{error}</p>;
   return student ? children : <Navigate to="/" replace />;
+}
+
+function RequireUser({ children }: { children: ReactNode }) {
+  const { user, loading } = useSession();
+  if (loading) return <p className="text-muted-foreground">Loading...</p>;
+  return user ? children : <Navigate to="/login" replace />;
 }
 
 // login and signup pages send logged-in users home
@@ -54,6 +61,7 @@ const router = createBrowserRouter([
       { path: "/forgot-password", element: <GuestOnly><ForgotPasswordPage /></GuestOnly> },
       { path: "/confirm", element: <ConfirmPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },
+      { path: "/profile", element: <RequireUser><ProfilePage /></RequireUser> },
       { path: "/transcript", element: <RequireStudent><TranscriptPage /></RequireStudent> },
       { path: "/audit", element: <RequireStudent><AuditPage /></RequireStudent> },
       { path: "*", element: <Navigate to="/" replace /> },
