@@ -31,7 +31,7 @@ describe.skipIf(!databaseUrl)("API", () => {
     const { migrate } = await import("../src/migrate.ts");
     const { app } = await import("../src/app.ts");
 
-    await pool.query("DROP TABLE IF EXISTS transcripts, attempts, students, sessions, signups, users, schema_migrations");
+    await pool.query("DROP TABLE IF EXISTS password_resets, transcripts, attempts, students, sessions, signups, users, schema_migrations");
     await migrate();
 
     const server = app.listen(0);
@@ -63,7 +63,7 @@ describe.skipIf(!databaseUrl)("API", () => {
 
   function linkTokenFor(email: string): string | undefined {
     const mail = sent.findLast((m) => m.to === email);
-    return mail?.text.match(/confirm\?token=([\w-]+)/)?.[1];
+    return mail?.text.match(/\?token=([\w-]+)/)?.[1];
   }
 
   // signs up, confirms, and returns the session cookie
@@ -152,6 +152,59 @@ describe.skipIf(!databaseUrl)("API", () => {
       await newUser(identity);
       for (let i = 0; i < 10; i++) await call("POST", "/auth/login", { ...identity, password: "wrong password" });
       expect((await call("POST", "/auth/login", identity)).status).toBe(429);
+    });
+  });
+
+  describe("passwords", () => {
+    it("resets a forgotten password once, logging out every other session", async () => {
+      const identity = newIdentity();
+      const oldSession = await newUser(identity);
+
+      expect((await call("POST", "/auth/forgot-password", { email: identity.email.toUpperCase() })).status).toBe(202);
+      expect(sent.at(-1)).toMatchObject({ to: identity.email, subject: "Reset your GradTrellis password" });
+      const token = linkTokenFor(identity.email);
+
+      expect((await call("POST", "/auth/reset-password", { token, password: "short" })).status).toBe(400);
+      const reset = await call("POST", "/auth/reset-password", { token, password: "a brand new password" });
+      expect(reset.status).toBe(200);
+      expect(reset.body.user).toMatchObject({ email: identity.email });
+      expect((await call("GET", "/auth/me", undefined, reset.cookie)).status).toBe(200);
+      expect((await call("GET", "/auth/me", undefined, oldSession)).status).toBe(401);
+
+      expect((await call("POST", "/auth/reset-password", { token, password: "another new password" })).status).toBe(400);
+      expect((await call("POST", "/auth/login", identity)).status).toBe(401);
+      expect((await call("POST", "/auth/login", { ...identity, password: "a brand new password" })).status).toBe(200);
+    });
+
+    it("only the latest reset link works", async () => {
+      const identity = newIdentity();
+      await newUser(identity);
+      await call("POST", "/auth/forgot-password", { email: identity.email });
+      const first = linkTokenFor(identity.email);
+      await call("POST", "/auth/forgot-password", { email: identity.email });
+      expect((await call("POST", "/auth/reset-password", { token: first, password: "a brand new password" })).status).toBe(400);
+      expect((await call("POST", "/auth/reset-password", { token: linkTokenFor(identity.email), password: "a brand new password" })).status).toBe(200);
+    });
+
+    it("doesn't reveal whether an email has an account", async () => {
+      const before = sent.length;
+      const res = await call("POST", "/auth/forgot-password", { email: "nobody@unb.ca" });
+      expect(res.status).toBe(202);
+      expect(sent.length).toBe(before);
+    });
+
+    it("changes the password with the current one", async () => {
+      const identity = newIdentity();
+      const cookie = await newUser(identity);
+      const other = (await call("POST", "/auth/login", identity)).cookie;
+
+      expect((await call("PUT", "/auth/password", { currentPassword: "wrong password", newPassword: "a brand new password" }, cookie)).status).toBe(400);
+      const changed = await call("PUT", "/auth/password", { currentPassword: identity.password, newPassword: "a brand new password" }, cookie);
+      expect(changed.status).toBe(204);
+
+      expect((await call("GET", "/auth/me", undefined, changed.cookie)).status).toBe(200);
+      expect((await call("GET", "/auth/me", undefined, other)).status).toBe(401);
+      expect((await call("POST", "/auth/login", { ...identity, password: "a brand new password" })).status).toBe(200);
     });
   });
 

@@ -3,7 +3,19 @@ import { z } from "zod";
 import { checkPassword, endSession, hashPassword, hashToken, newToken, requireUser, SESSION_DAYS, setSessionCookie } from "../auth.ts";
 import { sendEmail } from "../email.ts";
 import { getStudentForUser } from "../queries/students.ts";
-import { confirmSignup, createSession, findUserByEmail, getUser, saveSignup, studentNumberVerified } from "../queries/users.ts";
+import {
+  confirmSignup,
+  createSession,
+  deleteUserSessions,
+  findUserByEmail,
+  getPasswordHash,
+  getUser,
+  resetPassword,
+  savePasswordReset,
+  saveSignup,
+  setPassword,
+  studentNumberVerified,
+} from "../queries/users.ts";
 
 // where the links in emails point (the frontend)
 const appUrl = process.env.APP_URL ?? "http://localhost:5173";
@@ -14,10 +26,12 @@ const Email = z
   .toLowerCase()
   .regex(/^[a-z0-9._%+-]+@unb\.ca$/, "use your @unb.ca email");
 
+const Password = z.string().min(8, "use at least 8 characters").max(128);
+
 const SignupBody = z.object({
   email: Email,
   studentNumber: z.string().trim().regex(/^\d{7}$/, "student numbers are 7 digits"),
-  password: z.string().min(8, "use at least 8 characters").max(128),
+  password: Password,
 });
 
 const LoginBody = z.object({
@@ -26,6 +40,12 @@ const LoginBody = z.object({
 });
 
 const ConfirmBody = z.object({ token: z.string().min(1) });
+
+const ForgotBody = z.object({ email: z.string().trim().toLowerCase() });
+
+const ResetBody = z.object({ token: z.string().min(1), password: Password });
+
+const ChangePasswordBody = z.object({ currentPassword: z.string(), newPassword: Password });
 
 // Slows down password guessing. In memory, so it resets on restart; fine for one server.
 const MAX_FAILURES = 10;
@@ -107,6 +127,50 @@ authRouter.post("/login", async (req, res) => {
   failures.delete(email);
   await startSession(req, res, user.id);
   res.json({ user: await getUser(user.id) });
+});
+
+// Answers the same whether or not the email has an account, like signup.
+authRouter.post("/forgot-password", async (req, res) => {
+  const { email } = ForgotBody.parse(req.body);
+  const user = await findUserByEmail(email);
+  if (user) {
+    const { token, hash } = newToken();
+    await savePasswordReset(hash, user.id);
+    await sendEmail(
+      email,
+      "Reset your GradTrellis password",
+      `Open this link to choose a new password:\n${appUrl}/reset-password?token=${token}\n\nThe link works for 1 hour. If you didn't ask for this, ignore this email; your password hasn't changed.`,
+    );
+  }
+  res.status(202).json({ message: "If that email has an account, a reset link is on its way." });
+});
+
+// Logs out every other device, since a reset usually means the old password is compromised or lost.
+authRouter.post("/reset-password", async (req, res) => {
+  const { token, password } = ResetBody.parse(req.body);
+  const userId = await resetPassword(hashToken(token), await hashPassword(password));
+  if (!userId) {
+    res.status(400).json({ error: { message: "This link has expired or was already used. Ask for a new one." } });
+    return;
+  }
+  const user = await getUser(userId);
+  failures.delete(user!.email);
+  await deleteUserSessions(userId);
+  await startSession(req, res, userId);
+  res.json({ user });
+});
+
+authRouter.put("/password", requireUser, async (req, res) => {
+  const userId = res.locals.userId as string;
+  const { currentPassword, newPassword } = ChangePasswordBody.parse(req.body);
+  if (!(await checkPassword(currentPassword, (await getPasswordHash(userId))!))) {
+    res.status(400).json({ error: { message: "Your current password is wrong." } });
+    return;
+  }
+  await setPassword(userId, await hashPassword(newPassword));
+  await deleteUserSessions(userId);
+  await startSession(req, res, userId);
+  res.status(204).end();
 });
 
 authRouter.post("/logout", async (req, res) => {

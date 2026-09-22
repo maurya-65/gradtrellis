@@ -57,6 +57,13 @@ export const api = {
 
   logout: () => request<void>("POST", "/auth/logout"),
 
+  forgotPassword: (email: string) => request<{ message: string }>("POST", "/auth/forgot-password", { email }),
+
+  resetPassword: (token: string, password: string) =>
+    request<{ user: User }>("POST", "/auth/reset-password", { token, password }).then((r) => r.user),
+
+  changePassword: (currentPassword: string, newPassword: string) => request<void>("PUT", "/auth/password", { currentPassword, newPassword }),
+
   me: () => request<{ user: User; student: Student | null }>("GET", "/auth/me"),
 
   searchCourses: (q: string, limit = 12) =>

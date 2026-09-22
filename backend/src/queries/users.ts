@@ -90,6 +90,38 @@ export async function confirmSignup(tokenHash: string): Promise<string | null> {
   }
 }
 
+export async function savePasswordReset(tokenHash: string, userId: string) {
+  await pool.query(
+    `INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES ($1, $2, now() + interval '1 hour')
+     ON CONFLICT (user_id) DO UPDATE SET token_hash = excluded.token_hash, expires_at = excluded.expires_at`,
+    [tokenHash, userId],
+  );
+}
+
+// Uses up the link and sets the new password. Null if the link is unknown, expired or already used.
+export async function resetPassword(tokenHash: string, passwordHash: string): Promise<string | null> {
+  const { rows } = await pool.query<{ user_id: string }>(
+    `WITH reset AS (DELETE FROM password_resets WHERE token_hash = $1 AND expires_at > now() RETURNING user_id)
+     UPDATE users SET password_hash = $2 FROM reset WHERE users.id = reset.user_id RETURNING users.id AS user_id`,
+    [tokenHash, passwordHash],
+  );
+  return rows[0]?.user_id ?? null;
+}
+
+export async function getPasswordHash(userId: string): Promise<string | null> {
+  const { rows } = await pool.query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = $1", [userId]);
+  return rows[0]?.password_hash ?? null;
+}
+
+export async function setPassword(userId: string, passwordHash: string) {
+  await pool.query("UPDATE users SET password_hash = $2 WHERE id = $1", [userId, passwordHash]);
+}
+
+// logs the user out everywhere (after a password change or reset)
+export async function deleteUserSessions(userId: string) {
+  await pool.query("DELETE FROM sessions WHERE user_id = $1", [userId]);
+}
+
 export async function createSession(tokenHash: string, userId: string, days: number) {
   await pool.query("INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ($1, $2, now() + make_interval(days => $3))", [
     tokenHash,

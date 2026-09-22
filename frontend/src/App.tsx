@@ -4,8 +4,10 @@ import { Layout } from "./components/Layout.tsx";
 import { SessionProvider, useSession } from "./hooks/useSession.tsx";
 import { AuditPage } from "./pages/AuditPage.tsx";
 import { ConfirmPage } from "./pages/ConfirmPage.tsx";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage.tsx";
 import { LandingPage } from "./pages/LandingPage.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage.tsx";
 import { SetupPage } from "./pages/SetupPage.tsx";
 import { SignupPage } from "./pages/SignupPage.tsx";
 import { TranscriptPage } from "./pages/TranscriptPage.tsx";
@@ -49,7 +51,9 @@ const router = createBrowserRouter([
       { path: "/setup", element: <NeedsSetup><SetupPage /></NeedsSetup> },
       { path: "/login", element: <GuestOnly><LoginPage /></GuestOnly> },
       { path: "/signup", element: <GuestOnly><SignupPage /></GuestOnly> },
+      { path: "/forgot-password", element: <GuestOnly><ForgotPasswordPage /></GuestOnly> },
       { path: "/confirm", element: <ConfirmPage /> },
+      { path: "/reset-password", element: <ResetPasswordPage /> },
       { path: "/transcript", element: <RequireStudent><TranscriptPage /></RequireStudent> },
       { path: "/audit", element: <RequireStudent><AuditPage /></RequireStudent> },
       { path: "*", element: <Navigate to="/" replace /> },

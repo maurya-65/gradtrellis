@@ -36,15 +36,20 @@ export function LoginPage() {
       <form onSubmit={submit}>
         <CardContent className="grid gap-4">
           <TextField id="email" label="UNB email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-          <TextField
-            id="password"
-            label="Password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="grid gap-2">
+            <TextField
+              id="password"
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <Link to="/forgot-password" className="justify-self-end text-sm text-muted-foreground hover:text-foreground hover:underline">
+              Forgot password?
+            </Link>
+          </div>
           {error && (
             <p role="alert" className="text-sm text-destructive">
               {error}
