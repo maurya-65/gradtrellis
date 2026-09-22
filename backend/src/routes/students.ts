@@ -1,8 +1,16 @@
-import { Router, type Response } from "express";
+import express, { Router, type Response } from "express";
 import { z } from "zod";
 import { courseIndex, gradingScale, programs } from "../catalog.ts";
 import { Attempt, normalizeCourseCode, runAudit, StudentRecord, Term, termOn } from "../engine/index.ts";
-import { addAttempt, createStudent, deleteAttempt, getStudent, replaceAttempts, updateDesignations } from "../queries/students.ts";
+import {
+  addAttempt,
+  createStudent,
+  deleteAttempt,
+  getStudent,
+  replaceAttempts,
+  saveTranscript,
+  updateDesignations,
+} from "../queries/students.ts";
 
 // accepts "cs1073" as well as "CS 1073"
 const CourseCodeInput = z.string().transform((s, ctx) => {
@@ -93,6 +101,17 @@ studentsRouter.put("/:id/attempts", async (req, res) => {
   const student = await replaceAttempts(req.params.id, attempts);
   if (!student) return notFound(res);
   res.json({ student });
+});
+
+// the raw PDF of the latest imported transcript; replaces any earlier one
+studentsRouter.put("/:id/transcript", express.raw({ type: "application/pdf", limit: "5mb" }), async (req, res) => {
+  const file: unknown = req.body;
+  if (!Buffer.isBuffer(file) || file.subarray(0, 5).toString("latin1") !== "%PDF-") {
+    res.status(400).json({ error: { message: "expected a PDF file (content-type application/pdf)" } });
+    return;
+  }
+  if (!(await saveTranscript(req.params.id, file))) return notFound(res);
+  res.status(204).end();
 });
 
 studentsRouter.delete("/:id/attempts/:attemptId", async (req, res) => {

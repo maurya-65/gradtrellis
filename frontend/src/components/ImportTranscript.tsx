@@ -6,9 +6,11 @@ import { parseTranscript, type ParsedAttempt } from "../transcript/parse.ts";
 import { readPdfLines } from "../transcript/pdf.ts";
 import { resultOptions } from "./terms.ts";
 
-// The PDF is read in the browser; only the course lines are sent to the server.
+// The PDF is parsed in the browser. On save, the file is stored with the profile
+// (replacing any earlier one) and the reviewed courses replace the transcript.
 export function ImportTranscript({ student }: { student: Student }) {
   const { setStudent } = useStudent();
+  const [file, setFile] = useState<File | null>(null);
   const [attempts, setAttempts] = useState<ParsedAttempt[] | null>(null);
   const [unreadable, setUnreadable] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -25,6 +27,7 @@ export function ImportTranscript({ student }: { student: Student }) {
       if (parsed.attempts.length === 0) {
         setError("No courses found. Upload the unofficial transcript PDF from myUNB.");
       } else {
+        setFile(file);
         setAttempts(parsed.attempts);
         setUnreadable(parsed.unreadable);
       }
@@ -36,12 +39,14 @@ export function ImportTranscript({ student }: { student: Student }) {
   };
 
   const save = async () => {
-    if (!attempts) return;
+    if (!attempts || !file) return;
     setBusy(true);
     setError(null);
     try {
+      await api.uploadTranscript(student.id, file);
       setStudent(await api.replaceAttempts(student.id, attempts));
       setAttempts(null);
+      setFile(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "couldn't save your courses");
     } finally {
@@ -57,8 +62,7 @@ export function ImportTranscript({ student }: { student: Student }) {
       <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-base font-semibold text-slate-900">Import your transcript</h2>
         <p className="mt-1 text-sm text-slate-700">
-          Upload the unofficial transcript PDF from myUNB and check the courses before they're saved. The file is read in your browser and
-          isn't uploaded.
+          Upload the unofficial transcript PDF from myUNB and check the courses before they're saved.
         </p>
         <label className="mt-3 inline-block cursor-pointer rounded-md border border-teal-700 px-4 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50">
           {busy ? "Reading..." : "Choose PDF"}

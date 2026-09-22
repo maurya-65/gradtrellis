@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { join } from "node:path";
+import type pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const envFile = join(import.meta.dirname, "..", ".env");
@@ -11,15 +12,17 @@ const databaseUrl = process.env.TEST_DATABASE_URL;
 // Runs against a real database. The tables in TEST_DATABASE_URL are dropped and recreated.
 describe.skipIf(!databaseUrl)("API", () => {
   let base = "";
+  let db: pg.Pool;
   let close = async () => {};
 
   beforeAll(async () => {
     process.env.DATABASE_URL = databaseUrl;
     const { pool } = await import("../src/db.ts");
+    db = pool;
     const { migrate } = await import("../src/migrate.ts");
     const { app } = await import("../src/app.ts");
 
-    await pool.query("DROP TABLE IF EXISTS attempts, students, schema_migrations");
+    await pool.query("DROP TABLE IF EXISTS transcripts, attempts, students, schema_migrations");
     await migrate();
 
     const server = app.listen(0);
@@ -147,6 +150,31 @@ describe.skipIf(!databaseUrl)("API", () => {
     expect(res.status).toBe(400);
     const { body } = await call("GET", `/students/${student.id}`);
     expect(body.student.attempts.map((a: { code: string }) => a.code)).toEqual(["CS 1303"]);
+  });
+
+  async function upload(studentId: string, file: Buffer) {
+    const res = await fetch(`${base}/students/${studentId}/transcript`, {
+      method: "PUT",
+      headers: { "content-type": "application/pdf" },
+      body: new Uint8Array(file),
+    });
+    return res.status;
+  }
+
+  it("keeps only the latest transcript upload", async () => {
+    const student = await newStudent();
+    expect(await upload(student.id, Buffer.from("%PDF-1.4 first"))).toBe(204);
+    expect(await upload(student.id, Buffer.from("%PDF-1.4 second"))).toBe(204);
+
+    const { rows } = await db.query("SELECT file FROM transcripts WHERE student_id = $1", [student.id]);
+    expect(rows.map((r) => r.file.toString())).toEqual(["%PDF-1.4 second"]);
+  });
+
+  it("rejects transcripts that aren't PDFs or are too large", async () => {
+    const student = await newStudent();
+    expect(await upload(student.id, Buffer.from("not a pdf"))).toBe(400);
+    expect(await upload(student.id, Buffer.concat([Buffer.from("%PDF-"), Buffer.alloc(6 * 1024 * 1024)]))).toBe(413);
+    expect(await upload("00000000-0000-0000-0000-000000000000", Buffer.from("%PDF-1.4"))).toBe(404);
   });
 
   it("audits a student", async () => {

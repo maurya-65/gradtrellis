@@ -66,6 +66,7 @@ All routes are under `/api`. Errors look like `{ "error": { "message", "details"
 | `GET /students/:id`, `PATCH /students/:id` | Read a profile or change its designations |
 | `POST /students/:id/attempts` | Add a transcript line |
 | `PUT /students/:id/attempts` | Replace every transcript line in one transaction (transcript import) |
+| `PUT /students/:id/transcript` | Store the latest transcript PDF (raw `application/pdf` body, 5 MB max) |
 | `DELETE /students/:id/attempts/:attemptId` | Remove a transcript line |
 | `GET /students/:id/audit` | Degree audit |
 
@@ -73,13 +74,13 @@ There are no accounts yet. The frontend keeps the profile id in localStorage.
 
 ## Database
 
-PostgreSQL through `pg` with hand-written SQL. There are two tables, `students` and `attempts`, and CHECK constraints back up the request validation. Calendar data is not stored in the database.
+PostgreSQL through `pg` with hand-written SQL. There are three tables, `students`, `attempts` and `transcripts` (the latest uploaded PDF), and CHECK constraints back up the request validation. Calendar data is not stored in the database.
 
 ## Frontend
 
 Three pages: setup (entry term, Honours, Cybersecurity), transcript (course search, add and remove attempts, grouped by term) and audit.
 
-The transcript page can import the unofficial transcript PDF from myUNB. pdf.js reads it in the browser (`src/transcript/pdf.ts`), `src/transcript/parse.ts` picks out term headings and course lines, and the student reviews the result before it replaces their attempts. The PDF itself (name, student number, birth date) never reaches the server. A small profile control in the header changes the Honours and Cybersecurity choices after setup.
+The transcript page can import the unofficial transcript PDF from myUNB. pdf.js reads it in the browser (`src/transcript/pdf.ts`), `src/transcript/parse.ts` picks out term headings and course lines, and the student reviews the result before it replaces their attempts. Saving also stores the PDF in `transcripts`, one per student, replacing any earlier upload. It holds personal data (name, student number, birth date), so no endpoint serves it back. A small profile control in the header changes the Honours and Cybersecurity choices after setup.
 
 ## Tests
 

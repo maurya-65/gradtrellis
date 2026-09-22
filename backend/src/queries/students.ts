@@ -122,6 +122,18 @@ export async function replaceAttempts(studentId: string, attempts: Attempt[]): P
   return getStudent(studentId);
 }
 
+// Keeps only the latest upload per student.
+export async function saveTranscript(studentId: string, file: Buffer): Promise<boolean> {
+  if (!UUID.test(studentId)) return false;
+  const res = await pool.query(
+    `INSERT INTO transcripts (student_id, file)
+     SELECT $1, $2 WHERE EXISTS (SELECT 1 FROM students WHERE id = $1)
+     ON CONFLICT (student_id) DO UPDATE SET file = excluded.file, uploaded_at = now()`,
+    [studentId, file],
+  );
+  return (res.rowCount ?? 0) > 0;
+}
+
 export async function deleteAttempt(studentId: string, attemptId: string): Promise<boolean> {
   if (!UUID.test(studentId) || !UUID.test(attemptId)) return false;
   const res = await pool.query("DELETE FROM attempts WHERE id = $1 AND student_id = $2", [attemptId, studentId]);

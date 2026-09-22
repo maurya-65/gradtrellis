@@ -25,11 +25,13 @@ export class ApiError extends Error {
   }
 }
 
+// a File is sent as-is (transcript upload), anything else as JSON
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const isFile = body instanceof File;
   const res = await fetch(`/api${path}`, {
     method,
-    headers: body === undefined ? {} : { "content-type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    headers: body === undefined ? {} : { "content-type": isFile ? "application/pdf" : "application/json" },
+    body: body === undefined ? undefined : isFile ? body : JSON.stringify(body),
   });
   if (res.status === 204) return undefined as T;
   const json = await res.json().catch(() => null);
@@ -54,6 +56,8 @@ export const api = {
 
   replaceAttempts: (id: string, attempts: Array<Omit<StoredAttempt, "id" | "notations">>) =>
     request<{ student: Student }>("PUT", `/students/${id}/attempts`, { attempts }).then((r) => r.student),
+
+  uploadTranscript: (id: string, file: File) => request<void>("PUT", `/students/${id}/transcript`, file),
 
   deleteAttempt: (id: string, attemptId: string) => request<void>("DELETE", `/students/${id}/attempts/${attemptId}`),
 

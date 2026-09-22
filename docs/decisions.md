@@ -60,3 +60,7 @@ Students will want to talk things through: "I'm into web dev or ML, what should 
 
 Guardrails are part of the design, not an add-on: the advisor only answers questions about courses, programs and planning, and declines everything else (coding help, homework, general chat). It has per-student rate limits and a daily usage cap. How to enforce the topic limit, which model to use and how to evaluate answers are decided at M4.
 
+
+## 2026-09-22: Keep each student's latest transcript PDF
+
+The import used to keep the PDF in the browser. We now store the latest upload per student (a new one replaces it) so later features can use more of the transcript than the course lines. It holds personal data, so: the privacy section (to be written) will say we keep it, nothing serves it back until there are accounts to protect it, and it's deleted with the profile.
