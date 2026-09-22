@@ -2,7 +2,7 @@ import express, { Router, type Response } from "express";
 import { z } from "zod";
 import { requireUser } from "../auth.ts";
 import { courseIndex, gradingScale, programs } from "../catalog.ts";
-import { Attempt, normalizeCourseCode, runAudit, StudentRecord, Term, termOn } from "../engine/index.ts";
+import { Attempt, normalizeCourseCode, Result, runAudit, StudentRecord, Term, termOn } from "../engine/index.ts";
 import {
   addAttempt,
   createStudent,
@@ -11,6 +11,7 @@ import {
   replaceAttempts,
   saveTranscript,
   studentIdForUser,
+  updateAttemptResult,
   updateDesignations,
 } from "../queries/students.ts";
 import { getUser, verifyUser } from "../queries/users.ts";
@@ -46,6 +47,8 @@ const AttemptBody = Attempt.extend({
   creditHours: z.number().min(0).max(12).optional(),
   title: z.string().max(200).optional(),
 });
+
+const ResultBody = z.object({ result: Result });
 
 const ReplaceBody = z.object({
   attempts: z.array(AttemptBody).max(200),
@@ -141,6 +144,18 @@ studentRouter.put("/transcript", express.raw({ type: "application/pdf", limit: "
   }
   await saveTranscript(id, file);
   res.json({ user: await getUser(userId) });
+});
+
+studentRouter.patch("/attempts/:attemptId", async (req, res) => {
+  const { result } = ResultBody.parse(req.body);
+  const id = await ownStudentId(res);
+  if (!id) return;
+  const attempt = await updateAttemptResult(id, req.params.attemptId, result);
+  if (!attempt) {
+    res.status(404).json({ error: { message: "attempt not found" } });
+    return;
+  }
+  res.json({ attempt });
 });
 
 studentRouter.delete("/attempts/:attemptId", async (req, res) => {

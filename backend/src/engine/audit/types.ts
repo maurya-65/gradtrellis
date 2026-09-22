@@ -42,6 +42,8 @@ export interface ConstraintResult {
   have: number;
   need: number;
   unit: "courses" | "ch";
+  // the courses in this requirement that count toward the constraint
+  courses: CourseCode[];
 }
 
 export interface RequirementResult {
@@ -53,6 +55,8 @@ export interface RequirementResult {
   used: UsedCourse[];
   // beyond the minimum
   surplus?: UsedCourse[] | undefined;
+  // pools: running totals against the pool's minimums, e.g. 8 of 10 courses
+  progress?: Array<{ unit: "courses" | "ch"; have: number; need: number }> | undefined;
   constraints?: ConstraintResult[] | undefined;
   couldCountWithApproval?: Array<{ code: CourseCode; by: string }> | undefined;
   chosenOption?: string | undefined;

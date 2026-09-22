@@ -140,6 +140,16 @@ export async function saveTranscript(studentId: string, file: Buffer): Promise<b
   return (res.rowCount ?? 0) > 0;
 }
 
+// e.g. "In progress" becoming a letter grade once results are out
+export async function updateAttemptResult(studentId: string, attemptId: string, result: Attempt["result"]): Promise<StoredAttempt | null> {
+  if (!UUID.test(attemptId)) return null;
+  const { rows } = await pool.query<AttemptRow>(
+    `UPDATE attempts SET result = $3 WHERE id = $1 AND student_id = $2 RETURNING ${ATTEMPT_COLUMNS}`,
+    [attemptId, studentId, result],
+  );
+  return rows[0] ? toAttempt(rows[0]) : null;
+}
+
 export async function deleteAttempt(studentId: string, attemptId: string): Promise<boolean> {
   if (!UUID.test(attemptId)) return false;
   const res = await pool.query("DELETE FROM attempts WHERE id = $1 AND student_id = $2", [attemptId, studentId]);

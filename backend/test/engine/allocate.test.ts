@@ -146,6 +146,16 @@ describe("audit rules", () => {
     expect(elective.couldCountWithApproval).toBeUndefined();
   });
 
+  it("lists which courses count toward a pool's level rule", () => {
+    const breadth = find(audit([att("ANTH 1001", F24, "A"), att("ANTH 2304", W25, "B")]), "breadth");
+    expect(breadth.used.map((u) => u.code).sort()).toEqual(["ANTH 1001", "ANTH 2304"]);
+    expect(breadth.constraints!.find((c) => c.id === "breadth-upper-year")).toMatchObject({ have: 1, need: 2, courses: ["ANTH 2304"] });
+    expect(breadth.progress).toEqual([
+      { unit: "courses", have: 2, need: 10 },
+      { unit: "ch", have: 6, need: 30 },
+    ]);
+  });
+
   it("a course registered for a later term is planned, not in progress", () => {
     const W27 = { season: "Winter" as const, year: 2027 };
     const a = audit([att("CS 1073", NOW, "IP"), att("CS 1083", W27, "IP")]);

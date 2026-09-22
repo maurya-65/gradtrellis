@@ -33,15 +33,19 @@ export const RESULTS = [
 ] as const;
 
 // IP is UNB's code for "no grade yet"; before the term starts, that's a planned course
-export function isPlanned(term: Term, now = new Date()): boolean {
+function isPlanned(term: Term, now = new Date()): boolean {
   return compareTerms(term, termOn(now)) > 0;
 }
 
-export function resultLabel(result: Result, term: Term): string {
-  if (result !== "IP") return result;
-  return isPlanned(term) ? "Planned" : "In progress";
+// A planned course can't have a grade yet. A course in the current term stays in progress
+// until results come out, but those can arrive before the term ends (Fall grades land in
+// late December), so grades are still offered.
+export function resultOptions(term: Term): Array<{ value: Result; label: string }> {
+  if (isPlanned(term)) return [{ value: "IP", label: "Planned" }];
+  return RESULTS.map((r) => ({ value: r.value, label: r.value === "IP" ? "In progress" : r.label }));
 }
 
-export function resultOptions(term: Term) {
-  return RESULTS.map((r) => ({ value: r.value, label: r.value === "IP" ? resultLabel("IP", term) : r.label }));
+// what a new course starts as: in progress (or planned) unless its term is over
+export function defaultResult(term: Term, now = new Date()): Result | null {
+  return compareTerms(term, termOn(now)) >= 0 ? "IP" : null;
 }

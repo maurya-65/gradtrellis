@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router";
-import { api, type StoredAttempt } from "../api/client.ts";
+import { api, type Result, type StoredAttempt } from "../api/client.ts";
 import { AddCourseForm } from "../components/AddCourseForm.tsx";
 import { ImportTranscript } from "../components/ImportTranscript.tsx";
 import { TermTable } from "../components/TermTable.tsx";
@@ -22,6 +22,11 @@ export function TranscriptPage() {
   }, [student]);
 
   if (!student) return null;
+
+  const changeResult = async (a: StoredAttempt, result: Result) => {
+    await api.updateAttemptResult(a.id, result);
+    await refresh();
+  };
 
   const remove = async (a: StoredAttempt) => {
     await api.deleteAttempt(a.id);
@@ -51,7 +56,7 @@ export function TranscriptPage() {
       ) : (
         <div className="space-y-6">
           {byTerm.map((g) => (
-            <TermTable key={g.label} label={g.label} attempts={g.attempts} onRemove={(a) => void remove(a)} />
+            <TermTable key={g.label} label={g.label} attempts={g.attempts} onChangeResult={(a, r) => void changeResult(a, r)} onRemove={(a) => void remove(a)} />
           ))}
         </div>
       )}

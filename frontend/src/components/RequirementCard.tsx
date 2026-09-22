@@ -29,6 +29,28 @@ function CourseChip({ code, state, note }: { code: string; state: Requirement["u
   );
 }
 
+// One line of a pool's checklist. Counts past the minimum show as full; the extra courses
+// are marked "beyond the minimum" above.
+function RuleRow({ title, have, need, detail }: { title: string; have: number; need: number; detail?: string }) {
+  const met = have >= need;
+  return (
+    <li>
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex items-center gap-2 text-slate-700">
+          <span aria-hidden className={met ? "text-teal-700" : "text-slate-400"}>
+            {met ? "✓" : "○"}
+          </span>
+          {title}
+        </span>
+        <span className={met ? "font-medium text-teal-800" : "text-slate-600"}>
+          {Math.min(have, need)} of {need}
+        </span>
+      </div>
+      {detail && <p className="ml-6 text-xs text-slate-500">{detail}</p>}
+    </li>
+  );
+}
+
 // a single course, or a choice like "Calculus I: MATH 1003 or MATH 1053"
 interface Row {
   id: string;
@@ -91,15 +113,20 @@ function Body({ req, depth }: { req: Requirement; depth: number }) {
         </div>
       )}
 
-      {req.constraints && req.constraints.length > 0 && (
-        <ul className="mt-3 space-y-1 text-sm">
-          {req.constraints.map((c) => (
-            <li key={c.id} className="flex items-center justify-between gap-3">
-              <span className="text-slate-700">{c.title}</span>
-              <span className={c.have >= c.need ? "font-medium text-teal-800" : "text-slate-600"}>
-                {c.have} of {c.need}
-              </span>
-            </li>
+      {((req.progress?.length ?? 0) > 0 || (req.constraints?.length ?? 0) > 0) && (
+        <ul className="mt-3 space-y-2 text-sm">
+          {req.progress?.map((p) => (
+            // the pool's own minimums: a running count like 8 of 10 courses
+            <RuleRow key={p.unit} title={p.unit === "courses" ? "Courses" : "Credit hours"} have={p.have} need={p.need} />
+          ))}
+          {req.constraints?.map((c) => (
+            <RuleRow
+              key={c.id}
+              title={c.title}
+              have={c.have}
+              need={c.need}
+              detail={c.courses.length ? `Counting: ${c.courses.join(", ")}` : "None counting yet"}
+            />
           ))}
         </ul>
       )}

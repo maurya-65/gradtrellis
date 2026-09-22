@@ -77,6 +77,9 @@ export const api = {
   // also verifies the account's student number against the one on the transcript
   uploadTranscript: (file: File) => request<{ user: User }>("PUT", "/student/transcript", file).then((r) => r.user),
 
+  updateAttemptResult: (attemptId: string, result: Result) =>
+    request<{ attempt: StoredAttempt }>("PATCH", `/student/attempts/${attemptId}`, { result }).then((r) => r.attempt),
+
   deleteAttempt: (attemptId: string) => request<void>("DELETE", `/student/attempts/${attemptId}`),
 
   getAudit: () => request<{ audit: AuditResult }>("GET", "/student/audit").then((r) => r.audit),

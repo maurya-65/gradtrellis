@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { api, ApiError, type CourseSummary, type Result, type Season, type Student } from "../api/client.ts";
 import { CourseSearch } from "./CourseSearch.tsx";
 import { compareTerms, termLabel, termOn } from "backend/engine/terms";
-import { resultOptions, termOptions } from "./terms.ts";
+import { defaultResult, resultOptions, termOptions } from "./terms.ts";
 
 type Selected = { code: string; title?: string; creditHours?: number; listed: boolean };
 
@@ -14,7 +14,8 @@ interface Props {
 export function AddCourseForm({ student, onAdded }: Props) {
   const [selected, setSelected] = useState<Selected | null>(null);
   const [term, setTerm] = useState("");
-  const [result, setResult] = useState<Result>("A");
+  // null until chosen; then the term decides (in progress now, planned later, a grade before)
+  const [result, setResult] = useState<Result | null>(null);
   const [creditHours, setCreditHours] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -25,20 +26,24 @@ export function AddCourseForm({ student, onAdded }: Props) {
   const defaultTerm = compareTerms(now, student.program.entry) >= 0 ? now : student.program.entry;
   const chosenTerm = term || termLabel(defaultTerm);
   const [season, year] = chosenTerm.split(" ") as [Season, string];
+  const chosen = { season, year: Number(year) };
+  const effectiveResult = result ?? defaultResult(chosen);
+  const options = resultOptions(chosen);
 
   const add = async (e: FormEvent) => {
     e.preventDefault();
-    if (!selected) return;
+    if (!selected || !effectiveResult) return;
     setBusy(true);
     setError(null);
     try {
       await api.addAttempt({
         code: selected.code,
-        term: { season, year: Number(year) },
-        result,
+        term: chosen,
+        result: effectiveResult,
         ...(selected.listed ? {} : { creditHours: Number(creditHours), ...(selected.title ? { title: selected.title } : {}) }),
       });
       setSelected(null);
+      setResult(null);
       setCreditHours("");
       await onAdded();
     } catch (err) {
@@ -79,7 +84,10 @@ export function AddCourseForm({ student, onAdded }: Props) {
           <label htmlFor="term" className="mb-1 block text-sm font-medium text-slate-800">
             Term
           </label>
-          <select id="term" className={`w-full ${field}`} value={chosenTerm} onChange={(e) => setTerm(e.target.value)}>
+          <select id="term" className={`w-full ${field}`} value={chosenTerm} onChange={(e) => {
+              setTerm(e.target.value);
+              setResult(null);
+            }}>
             {terms.map((t) => (
               <option key={termLabel(t)}>{termLabel(t)}</option>
             ))}
@@ -90,8 +98,20 @@ export function AddCourseForm({ student, onAdded }: Props) {
           <label htmlFor="result" className="mb-1 block text-sm font-medium text-slate-800">
             Grade
           </label>
-          <select id="result" className={`w-full ${field}`} value={result} onChange={(e) => setResult(e.target.value as Result)}>
-            {resultOptions({ season, year: Number(year) }).map((r) => (
+          <select
+            id="result"
+            className={`w-full ${field}`}
+            value={effectiveResult ?? ""}
+            disabled={options.length === 1}
+            required
+            onChange={(e) => setResult(e.target.value as Result)}
+          >
+            {!effectiveResult && (
+              <option value="" disabled>
+                Choose a grade
+              </option>
+            )}
+            {options.map((r) => (
               <option key={r.value} value={r.value}>
                 {r.label}
               </option>
@@ -101,7 +121,7 @@ export function AddCourseForm({ student, onAdded }: Props) {
 
         <button
           type="submit"
-          disabled={!selected || busy || (needsHours ? !creditHours : false)}
+          disabled={!selected || !effectiveResult || busy || (needsHours ? !creditHours : false)}
           className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-800 disabled:opacity-50"
         >
           Add

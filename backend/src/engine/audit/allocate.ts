@@ -133,7 +133,7 @@ function accepts(slot: Slot, c: UsableCourse, ctx: AllocationContext): boolean {
 export interface PoolMeasure {
   courses: number;
   creditHours: number;
-  constraints: Array<{ c: PoolConstraint; have: number; need: number; unit: "courses" | "ch" }>;
+  constraints: Array<{ c: PoolConstraint; have: number; need: number; unit: "courses" | "ch"; courses: CourseCode[] }>;
   mustInclude: Array<{ code: CourseCode; minGrade?: LetterGrade | undefined; met: boolean }>;
   deficit: number;
 }
@@ -153,9 +153,10 @@ export function measurePool(slot: PoolSlot, courses: UsableCourse[], ctx: Alloca
     const chHave = hits.reduce((n, x) => n + x.facts.creditHours, 0);
     if (c.minCourses) gaps.push(Math.max(0, c.minCourses - courseHave));
     if (c.minCreditHours) gaps.push(Math.max(0, c.minCreditHours - chHave) / 3);
+    const codes = hits.map((x) => x.code);
     return c.minCourses
-      ? { c, have: courseHave, need: c.minCourses, unit: "courses" as const }
-      : { c, have: chHave, need: c.minCreditHours ?? 0, unit: "ch" as const };
+      ? { c, have: courseHave, need: c.minCourses, unit: "courses" as const, courses: codes }
+      : { c, have: chHave, need: c.minCreditHours ?? 0, unit: "ch" as const, courses: codes };
   });
 
   const mustInclude = slot.mustInclude.map((m) => {

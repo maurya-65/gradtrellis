@@ -257,6 +257,20 @@ describe.skipIf(!databaseUrl)("API", () => {
       expect(res.body.error.details.map((d: { path: string }) => d.path).sort()).toEqual(["code", "result", "term.season"]);
     });
 
+    it("changes an attempt's result, and only the owner can", async () => {
+      const { cookie } = await newStudent();
+      const { body } = await call("POST", "/student/attempts", { ...cs1073, result: "IP" }, cookie);
+      const path = `/student/attempts/${body.attempt.id}`;
+
+      const stranger = await newStudent();
+      expect((await call("PATCH", path, { result: "A" }, stranger.cookie)).status).toBe(404);
+      expect((await call("PATCH", path, { result: "Z" }, cookie)).status).toBe(400);
+
+      const res = await call("PATCH", path, { result: "B+" }, cookie);
+      expect(res.status).toBe(200);
+      expect(res.body.attempt).toMatchObject({ code: "CS 1073", result: "B+" });
+    });
+
     it("deletes an attempt once, and only the owner can", async () => {
       const { cookie } = await newStudent();
       const { body } = await call("POST", "/student/attempts", cs1073, cookie);

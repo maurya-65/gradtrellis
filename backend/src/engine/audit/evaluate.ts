@@ -191,6 +191,10 @@ function evaluatePool(req: PoolRequirement, env: EvalEnv): RequirementResult {
     remaining: poolRemaining(status, pool, all, courses),
     used: kept.map((c) => used(c)),
     surplus: surplus.length ? surplus.map((c) => used(c)) : undefined,
+    progress: [
+      ...(pool.minCourses ? [{ unit: "courses" as const, have: all.courses, need: pool.minCourses }] : []),
+      ...(pool.minCreditHours ? [{ unit: "ch" as const, have: all.creditHours, need: pool.minCreditHours }] : []),
+    ],
     constraints: constraintResults(all, current, done),
     couldCountWithApproval: couldCount.length ? couldCount : undefined,
     source: pool.source,
@@ -237,7 +241,7 @@ function constraintResults(all: PoolMeasure, current: PoolMeasure, done: PoolMea
     const have = (m: PoolMeasure) => m.constraints.find((d) => d.c.id === c.c.id)!.have;
     const status: RequirementStatus =
       c.have < c.need ? "incomplete" : have(done) >= c.need ? "complete" : have(current) >= c.need ? "in-progress" : "planned";
-    return { id: c.c.id, title: c.c.title, have: c.have, need: c.need, unit: c.unit, status };
+    return { id: c.c.id, title: c.c.title, have: c.have, need: c.need, unit: c.unit, courses: c.courses, status };
   });
 }
 

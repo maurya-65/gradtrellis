@@ -71,6 +71,7 @@ All routes are under `/api`. Errors look like `{ "error": { "message", "details"
 | `POST /student/attempts` | Add a transcript line |
 | `PUT /student/attempts` | Replace every transcript line in one transaction (transcript import) |
 | `PUT /student/transcript` | Store the latest transcript PDF (raw `application/pdf` body, 5 MB max) and verify the student number |
+| `PATCH /student/attempts/:attemptId` | Change a transcript line's result (e.g. in progress to a grade) |
 | `DELETE /student/attempts/:attemptId` | Remove a transcript line |
 | `GET /student/audit` | Degree audit |
 
