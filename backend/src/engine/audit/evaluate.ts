@@ -70,7 +70,10 @@ export function evaluateRequirement(req: Requirement, env: EvalEnv): Requirement
       const status = worstStatus(children.map((c) => c.status));
       const missing = children.filter((c) => c.status === "incomplete");
       const missingCourses = missing.filter((c) => c.kind === "course").map((c) => c.title);
-      const missingOther = missing.filter((c) => c.kind !== "course").map((c) => `${c.title}: ${c.remaining}`);
+      // an untouched choice already reads as "one of A, B or C"; its title would only repeat it
+      const missingOther = missing
+        .filter((c) => c.kind !== "course")
+        .map((c) => (c.kind === "oneOf" && c.used.length === 0 ? c.remaining : `${c.title}: ${c.remaining}`));
       const pending = pendingText(children.filter((c) => c.status === "in-progress" || c.status === "planned").flatMap((c) => c.used));
       const toReview = children.filter((c) => c.status === "review" && c.remaining).map((c) => c.remaining);
       const parts = [
@@ -87,12 +90,16 @@ export function evaluateRequirement(req: Requirement, env: EvalEnv): Requirement
       const option = req.options[index]!;
       const chosen = evaluateRequirement(option, env);
       const others = req.options.filter((_, i) => i !== index).map(label);
+      // Nothing started yet: every option is still open, so name them all rather than whichever
+      // one the allocator happened to rank first.
+      const untouched = chosen.status === "incomplete" && chosen.used.length === 0;
+      const labels = req.options.map(label);
       return {
         ...base,
         kind: "oneOf",
         title: req.title,
         status: chosen.status,
-        remaining: chosen.remaining,
+        remaining: untouched ? `one of ${labels.slice(0, -1).join(", ")} or ${labels.at(-1)}` : chosen.remaining,
         used: chosen.used,
         chosenOption: label(option),
         children: [chosen],
