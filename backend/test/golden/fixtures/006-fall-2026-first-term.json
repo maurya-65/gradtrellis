@@ -1,0 +1,122 @@
+{
+  "id": "006-fall-2026-first-term",
+  "description": "A Fall 2026 entrant's first term, audited against the 2026-2027 calendar: the core now names CS 1543 instead of CS 1103.",
+  "provenance": "synthetic",
+  "reviewedBy": [],
+  "asOf": {
+    "season": "Fall",
+    "year": 2026
+  },
+  "record": {
+    "id": "golden-006",
+    "program": {
+      "institution": "unb",
+      "campus": "fredericton",
+      "code": "BCS",
+      "entry": {
+        "season": "Fall",
+        "year": 2026
+      }
+    },
+    "attempts": [
+      {
+        "code": "CS 1073",
+        "term": {
+          "season": "Fall",
+          "year": 2026
+        },
+        "result": "IP"
+      },
+      {
+        "code": "CS 1303",
+        "term": {
+          "season": "Fall",
+          "year": 2026
+        },
+        "result": "IP"
+      },
+      {
+        "code": "CS 1543",
+        "term": {
+          "season": "Fall",
+          "year": 2026
+        },
+        "result": "IP"
+      },
+      {
+        "code": "MATH 1003",
+        "term": {
+          "season": "Fall",
+          "year": 2026
+        },
+        "result": "IP"
+      },
+      {
+        "code": "ENGL 1103",
+        "term": {
+          "season": "Fall",
+          "year": 2026
+        },
+        "result": "IP"
+      }
+    ]
+  },
+  "expect": {
+    "cgpa": "—",
+    "cgpaWorking": "nothing graded yet, so there is no GPA",
+    "warnings": [],
+    "audit": {
+      "status": "incomplete",
+      "totals": {
+        "courses": {
+          "have": 0,
+          "inProgress": 5
+        },
+        "creditHours": {
+          "have": 0,
+          "inProgress": 18
+        },
+        "working": "in progress: CS 1073 4 + CS 1303 4 + CS 1543 4 + MATH 1003 3 + ENGL 1103 3 = 18 ch"
+      },
+      "requirements": {
+        "cs-core": {
+          "status": "incomplete",
+          "includes": [
+            "CS 1073",
+            "CS 1303",
+            "CS 1543"
+          ]
+        },
+        "cs-1543": {
+          "status": "in-progress",
+          "used": [
+            "CS 1543"
+          ]
+        },
+        "math-core": {
+          "status": "incomplete"
+        },
+        "calculus-1": {
+          "status": "in-progress",
+          "used": [
+            "MATH 1003"
+          ]
+        },
+        "breadth": {
+          "status": "incomplete"
+        },
+        "tech-electives": {
+          "status": "incomplete"
+        },
+        "free-electives": {
+          "status": "incomplete"
+        },
+        "writing": {
+          "status": "incomplete"
+        }
+      },
+      "notCounted": [],
+      "notes": "ENGL 1103 is the only breadth-eligible course, so it sits in the breadth pool; it also counts toward the 12 ch writing overlay. CS 1543 fills the databases core requirement directly, with no substitution note. Groups take the worst status of their parts, so the core, math, breadth and writing requirements are incomplete while courses remain untaken; only the individual courses under way (CS 1543, MATH 1003 for Calculus I) are in progress."
+    }
+  }
+}

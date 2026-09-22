@@ -1,0 +1,907 @@
+{
+ "id": "unb-fredericton-bcs-2026-2027",
+ "institution": "unb",
+ "campus": "fredericton",
+ "code": "BCS",
+ "name": "Bachelor of Computer Science",
+ "calendarYear": "2026-2027",
+ "source": {
+  "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+  "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+  "section": "Bachelor of Computer Science"
+ },
+ "minGrade": "C",
+ "totals": {
+  "minCourses": 40,
+  "minCreditHours": 133,
+  "source": {
+   "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+   "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+   "section": "General Regulations",
+   "quote": "To earn a BCS degree, a student must complete at least 40 courses, as specified below. Completing these requirements involves completing at least 133 credit hours worth of courses."
+  }
+ },
+ "nonCredit": {
+  "codes": [
+   "CS 2704",
+   "MATH 1823",
+   "MATH 1833",
+   "MATH 1843",
+   "MATH 2633",
+   "ADM 2623",
+   "PHIL 3101",
+   "UNIV 0101",
+   "AESL 1011",
+   "AESL 1012",
+   "ECE 2213",
+   "ECE 2214",
+   "ECE 2215",
+   "ECE 3221"
+  ],
+  "source": {
+   "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+   "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+   "section": "General Notes",
+   "quote": "Credit is not given toward the BCS degree for CS 2704, MATH 1823, MATH 1833, MATH 1843, MATH 2633, ADM 2623, PHIL 3101. UNIV 0101 (formerly UNIV 1001), AESL 1011 and AESL 1012 will not be counted for credit toward degree programs offered by the Faculty of Computer Science. ... None of ECE 2213, ECE 2214, ECE 2215, or ECE 3221 will normally be counted for credit toward the BCS degree."
+  }
+ },
+ "creditExclusions": [
+  {
+   "codes": [
+    "CS 1303",
+    "MATH 2203"
+   ],
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "General Notes",
+    "quote": "Credit will not be given for both CS 1303, MATH 2203."
+   }
+  }
+ ],
+ "requirements": [
+  {
+   "type": "allOf",
+   "id": "cs-core",
+   "title": "Computer Science Core",
+   "items": [
+    {
+     "type": "course",
+     "id": "cs-1073",
+     "code": "CS 1073",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-1083",
+     "code": "CS 1083",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-1543",
+     "code": "CS 1543",
+     "acceptAlso": {
+      "codes": [
+       "CS 1103",
+       "INFO 1103"
+      ],
+      "reason": "CS 1543 \"Introduction to Databases\" says: \"Credit can only be obtained for one of CS 1543, CS 1103, INFO 1103.\" CS 1103 is the code the core used through 2024-2025.",
+      "confirmed": false
+     },
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-1303",
+     "code": "CS 1303",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-2043",
+     "code": "CS 2043",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-2253",
+     "code": "CS 2253",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-2263",
+     "code": "CS 2263",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-2333",
+     "code": "CS 2333",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-2383",
+     "code": "CS 2383",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-3383",
+     "code": "CS 3383",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-3413",
+     "code": "CS 3413",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-3853",
+     "code": "CS 3853",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-3873",
+     "code": "CS 3873",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    },
+    {
+     "type": "course",
+     "id": "cs-3997",
+     "code": "CS 3997",
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Computer Science Core Requirement"
+     }
+    }
+   ],
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "Computer Science Core Requirement",
+    "quote": "As of the 2016-2017 academic year the following set of core courses is in effect for students admitted to the BCS program"
+   }
+  },
+  {
+   "type": "pool",
+   "id": "tech-electives",
+   "title": "Technical Electives",
+   "select": {
+    "type": "all",
+    "of": [
+     {
+      "type": "subjects",
+      "subjects": [
+       "CS",
+       "SWE"
+      ]
+     },
+     {
+      "type": "any",
+      "of": [
+       {
+        "type": "minCreditHours",
+        "min": 3
+       },
+       {
+        "type": "codes",
+        "codes": [
+         "CS 4983"
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "minCourses": 7,
+   "minCreditHours": 21,
+   "sixChCountsAsTwo": true,
+   "constraints": [
+    {
+     "id": "te-programming",
+     "title": "At least 3 with a significant programming component (P)",
+     "select": {
+      "type": "flag",
+      "flag": "programming"
+     },
+     "minCourses": 3
+    },
+    {
+     "id": "te-third-year",
+     "title": "At least 4 at 3rd year or above",
+     "select": {
+      "type": "level",
+      "min": 3
+     },
+     "minCourses": 4
+    },
+    {
+     "id": "te-fourth-year",
+     "title": "At least 1 at 4th year or above (CS 4983 doesn't count)",
+     "select": {
+      "type": "all",
+      "of": [
+       {
+        "type": "level",
+        "min": 4
+       },
+       {
+        "type": "not",
+        "of": {
+         "type": "codes",
+         "codes": [
+          "CS 4983"
+         ]
+        }
+       }
+      ]
+     },
+     "minCourses": 1
+    }
+   ],
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "Technical Elective Requirement",
+    "quote": "students are required to select a total of 7 approved technical elective courses totalling a minimum of 21 ch (worth a minimum of 3 ch each, except that CS 4983 is permitted) ... 7 CS/SWE courses, at least 3 of which must have a significant computer programming component (indicated with a [P] in the Calendar). At least 4 of these 7 technical elective courses must be 3rd year or above, and at least 1 of these must be 4th year or above. CS 4983 does not satisfy the requirement for the 4th year course. NOTE : Courses worth 6 credit hours or more will count as two courses toward this requirement."
+   }
+  },
+  {
+   "type": "allOf",
+   "id": "math-core",
+   "title": "Mathematics and Statistics Core",
+   "items": [
+    {
+     "type": "oneOf",
+     "id": "calculus-1",
+     "title": "Calculus I",
+     "options": [
+      {
+       "type": "course",
+       "id": "math-1003",
+       "code": "MATH 1003",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Mathematics and Statistics Core Requirement"
+       }
+      },
+      {
+       "type": "course",
+       "id": "math-1053",
+       "code": "MATH 1053",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Common First Year"
+       }
+      }
+     ],
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Common First Year",
+      "quote": "MATH 1003 Calculus I: Differential Calculus, or MATH 1053 Enriched Intro to Calculus I"
+     }
+    },
+    {
+     "type": "oneOf",
+     "id": "calculus-2",
+     "title": "Calculus II",
+     "options": [
+      {
+       "type": "course",
+       "id": "math-1013",
+       "code": "MATH 1013",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Mathematics and Statistics Core Requirement"
+       }
+      },
+      {
+       "type": "course",
+       "id": "math-1063",
+       "code": "MATH 1063",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Common First Year"
+       }
+      }
+     ],
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Common First Year",
+      "quote": "MATH 1013 Calculus II: Integral Calculsu, or MATH 1063 Enriched Intro to Calculus II"
+     }
+    },
+    {
+     "type": "oneOf",
+     "id": "linear-algebra",
+     "title": "Linear Algebra",
+     "options": [
+      {
+       "type": "course",
+       "id": "math-1503",
+       "code": "MATH 1503",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Mathematics and Statistics Core Requirement"
+       }
+      },
+      {
+       "type": "course",
+       "id": "math-2213",
+       "code": "MATH 2213",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Mathematics and Statistics Core Requirement"
+       }
+      }
+     ],
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Mathematics and Statistics Core Requirement",
+      "quote": "One of: MATH 1503 Introduction to Linear Algebra MATH 2213 Linear Algebra I"
+     }
+    },
+    {
+     "type": "oneOf",
+     "id": "statistics",
+     "title": "Statistics (Option A or Option B)",
+     "options": [
+      {
+       "type": "allOf",
+       "id": "statistics-option-a",
+       "title": "Option A: STAT 3083 and STAT 3093",
+       "items": [
+        {
+         "type": "course",
+         "id": "stat-3083",
+         "code": "STAT 3083",
+         "source": {
+          "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+          "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+          "section": "Mathematics and Statistics Core Requirement"
+         }
+        },
+        {
+         "type": "course",
+         "id": "stat-3093",
+         "code": "STAT 3093",
+         "source": {
+          "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+          "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+          "section": "Mathematics and Statistics Core Requirement"
+         }
+        }
+       ]
+      },
+      {
+       "type": "allOf",
+       "id": "statistics-option-b",
+       "title": "Option B: STAT 2593 and one listed elective",
+       "items": [
+        {
+         "type": "course",
+         "id": "stat-2593",
+         "code": "STAT 2593",
+         "source": {
+          "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+          "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+          "section": "Mathematics and Statistics Core Requirement"
+         }
+        },
+        {
+         "type": "pool",
+         "id": "statistics-option-b-elective",
+         "title": "One math/stats elective from the Option B list",
+         "select": {
+          "type": "codes",
+          "codes": [
+           "CS 3113",
+           "MATH 2003",
+           "MATH 2513",
+           "MATH 3033",
+           "MATH 3063",
+           "MATH 3093",
+           "MATH 3213",
+           "MATH 3333",
+           "MATH 3343",
+           "MATH 3353",
+           "MATH 3363",
+           "MATH 3373",
+           "MATH 3383",
+           "MATH 3413",
+           "MATH 3803",
+           "MATH 4503",
+           "STAT 3093",
+           "STAT 3303",
+           "STAT 3373",
+           "STAT 4083"
+          ]
+         },
+         "minCourses": 1,
+         "approval": [
+          {
+           "select": {
+            "type": "all",
+            "of": [
+             {
+              "type": "subjects",
+              "subjects": [
+               "MATH",
+               "STAT"
+              ]
+             },
+             {
+              "type": "level",
+              "min": 2
+             }
+            ]
+           },
+           "by": "Assistant Dean (Undergraduate), Faculty of Computer Science",
+           "note": "Another approved MATH/STATS elective at the 2000 level or above"
+          }
+         ],
+         "source": {
+          "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+          "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+          "section": "Mathematics and Statistics Core Requirement",
+          "quote": "Another approved MATH/STATS elective at the 2000 level or above, approved by the Assistant Dean (Undergraduate) in the Faculty of Computer Science."
+         }
+        }
+       ]
+      }
+     ],
+     "source": {
+      "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+      "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+      "section": "Mathematics and Statistics Core Requirement",
+      "quote": "One of the following two options"
+     }
+    }
+   ],
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "Mathematics and Statistics Core Requirement"
+   }
+  },
+  {
+   "type": "pool",
+   "id": "breadth",
+   "title": "Breadth Core",
+   "select": {
+    "type": "not",
+    "of": {
+     "type": "subjects",
+     "subjects": [
+      "CS",
+      "SWE",
+      "MATH",
+      "STAT",
+      "ECE"
+     ]
+    }
+   },
+   "minCourses": 10,
+   "minCreditHours": 30,
+   "sixChCountsAsTwo": true,
+   "constraints": [
+    {
+     "id": "breadth-upper-year",
+     "title": "At least 2 courses (6 ch) at the 2000 level or above",
+     "select": {
+      "type": "level",
+      "min": 2
+     },
+     "minCourses": 2,
+     "minCreditHours": 6
+    }
+   ],
+   "approval": [
+    {
+     "select": {
+      "type": "subjects",
+      "subjects": [
+       "ECE"
+      ]
+     },
+     "by": "Assistant Dean (Undergraduate), Faculty of Computer Science",
+     "note": "Selected ECE courses may count toward breadth with prior approval"
+    }
+   ],
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "Breadth Core Requirement",
+    "quote": "BCS students must complete at least 10 approved courses (minimum of 30 ch) in subjects other than computer science and mathematics, which means that CS, SWE, MATH, and STAT courses are not eligible for this requirement. Selected ECE courses may be taken toward this requirement with prior approval from the Assistant Dean (Undergraduate). ... At least 2 of these courses (minimum of 6 ch) must be at the 2000 level or above."
+   }
+  },
+  {
+   "type": "pool",
+   "id": "free-electives",
+   "title": "Free Electives",
+   "select": {
+    "type": "anyCourse"
+   },
+   "minCourses": 4,
+   "minCreditHours": 12,
+   "sixChCountsAsTwo": true,
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "Free Electives",
+    "quote": "In addition to the courses taken to satisfy the core curriculum requirements, BCS students must complete at least 4 approved free electives (minimum of 12 ch)."
+   }
+  }
+ ],
+ "overlays": [
+  {
+   "type": "pool",
+   "id": "writing",
+   "title": "Writing Component (W)",
+   "select": {
+    "type": "all",
+    "of": [
+     {
+      "type": "flag",
+      "flag": "writing"
+     },
+     {
+      "type": "not",
+      "of": {
+       "type": "codes",
+       "codes": [
+        "AESL 1011",
+        "AESL 1012"
+       ]
+      }
+     }
+    ]
+   },
+   "minCreditHours": 12,
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "Curriculum",
+    "quote": "Every student must complete at least 12 credit hours of courses with an extensive English writing component with a minimum grade of \"C\". These courses are indicated with a \"W\" in the Calendar."
+   }
+  }
+ ],
+ "designations": [
+  {
+   "id": "honours",
+   "name": "Honours in Computer Science",
+   "kind": "honours",
+   "requirements": [
+    {
+     "type": "cgpa",
+     "id": "honours-cgpa",
+     "title": "Cumulative GPA of 3.0 or above",
+     "min": 3
+    }
+   ],
+   "patches": [
+    {
+     "pool": "tech-electives",
+     "constraints": [
+      {
+       "id": "te-third-year",
+       "title": "At least 5 at 3rd year or above (Honours)",
+       "select": {
+        "type": "level",
+        "min": 3
+       },
+       "minCourses": 5
+      },
+      {
+       "id": "te-fourth-year",
+       "title": "At least 2 at 4th year or above (Honours)",
+       "select": {
+        "type": "all",
+        "of": [
+         {
+          "type": "level",
+          "min": 4
+         },
+         {
+          "type": "not",
+          "of": {
+           "type": "codes",
+           "codes": [
+            "CS 4983"
+           ]
+          }
+         }
+        ]
+       },
+       "minCourses": 2
+      }
+     ],
+     "mustInclude": [
+      {
+       "code": "CS 4997",
+       "minGrade": "B"
+      }
+     ]
+    }
+   ],
+   "tiers": [
+    {
+     "label": "First Class Honours",
+     "minCgpa": 3.5
+    },
+    {
+     "label": "Honours",
+     "minCgpa": 3
+    }
+   ],
+   "compatibleWith": [
+    "cybersecurity"
+   ],
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "Honours in Computer Science",
+    "quote": "At least 5 of the student's 7 Technical Elective courses must be 3rd year or above, and at least 2 of these 7 courses must be 4th year or above. The student must have a cumulative grade point average of 3.0 or above. As one of the two required 4th year Technical Elective courses, the student must complete CS 4997 (Honours Thesis) with a grade of B or better."
+   }
+  },
+  {
+   "id": "cybersecurity",
+   "name": "Specialization in Cybersecurity",
+   "kind": "specialization",
+   "requirements": [
+    {
+     "type": "allOf",
+     "id": "cybersecurity-courses",
+     "title": "Cybersecurity courses (each C or better)",
+     "items": [
+      {
+       "type": "course",
+       "id": "cs-2413",
+       "code": "CS 2413",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Specialization in Cybersecurity"
+       }
+      },
+      {
+       "type": "course",
+       "id": "cs-4355",
+       "code": "CS 4355",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Specialization in Cybersecurity"
+       }
+      },
+      {
+       "type": "course",
+       "id": "cs-4411",
+       "code": "CS 4411",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Specialization in Cybersecurity"
+       }
+      },
+      {
+       "type": "course",
+       "id": "cs-4417",
+       "code": "CS 4417",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Specialization in Cybersecurity"
+       }
+      },
+      {
+       "type": "course",
+       "id": "cs-4865",
+       "code": "CS 4865",
+       "source": {
+        "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+        "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+        "section": "Specialization in Cybersecurity"
+       }
+      },
+      {
+       "type": "oneOf",
+       "id": "cybersecurity-choice",
+       "title": "One of CS 4413, CS 4415, CS 4419",
+       "options": [
+        {
+         "type": "course",
+         "id": "cs-4413",
+         "code": "CS 4413",
+         "source": {
+          "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+          "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+          "section": "Specialization in Cybersecurity"
+         }
+        },
+        {
+         "type": "course",
+         "id": "cs-4415",
+         "code": "CS 4415",
+         "source": {
+          "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+          "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+          "section": "Specialization in Cybersecurity"
+         }
+        },
+        {
+         "type": "course",
+         "id": "cs-4419",
+         "code": "CS 4419",
+         "source": {
+          "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+          "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+          "section": "Specialization in Cybersecurity"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "compatibleWith": [
+    "honours"
+   ],
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "Specialization in Cybersecurity",
+    "quote": "The requirements for the Specialization in Cybersecurity are to complete the following courses, each with a grade of C or better: CS 2413, CS 4355, CS 4411, CS 4417, CS 4865, (one of CS 4413, CS 4415, or CS 4419)."
+   }
+  }
+ ],
+ "policies": {
+  "failLimit": {
+   "count": 3,
+   "results": [
+    "D",
+    "F",
+    "WF",
+    "NCR"
+   ],
+   "consequence": "Required to withdraw from the Faculty of Computer Science, upon review by the Faculty",
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "General Regulations",
+    "quote": "If a BCS student receives a failing grade three times in any given course, upon review by the Faculty, that student will be required to withdraw from the Faculty. Failing grades include D, F, WF, and NCR. Courses with the W, #, or X notations do not count toward this total."
+   }
+  },
+  "load": {
+   "typicalCoursesPerTerm": [
+    5,
+    6
+   ],
+   "standardStudyTerms": 8,
+   "reducedLoad": {
+    "gpaBelow": 2.7,
+    "maxCourses": 5
+   },
+   "source": {
+    "document": "UNB Undergraduate Calendar 2026-2027, Section G: Bachelor of Computer Science",
+    "url": "https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html",
+    "section": "Curriculum",
+    "quote": "Students will typically take 5 or 6 courses per term to complete the program in 8 study terms. Students whose grade point average drops below 2.7 (B-) should restrict their course load to 5 courses, or fewer."
+   }
+  }
+ },
+ "interpretationNotes": [
+  {
+   "requirement": "cs-1543",
+   "note": "The 2026-2027 core lists CS 1543; earlier calendars listed CS 1103 (same title). GradTrellis accepts CS 1103 and INFO 1103 for it. Unconfirmed: check with FCS."
+  },
+  {
+   "requirement": "totals",
+   "note": "The calendar says 6 ch courses count as two toward technical electives, breadth and free electives. It doesn't say so for the 40-course total; GradTrellis counts them as two there as well, so the pools add up to 40 (14 + 7 + 5 + 10 + 4)."
+  },
+  {
+   "requirement": "calculus-1",
+   "note": "MATH 1053/1063 (Enriched Calculus) are accepted in place of MATH 1003/1013 because the Common First Year lists them as alternatives. The core requirement list itself names only MATH 1003/1013."
+  },
+  {
+   "requirement": "tech-electives",
+   "note": "CS 1203 may not be taken for BCS credit beyond first year (course listing). When taken in first year it can count as a technical or free elective."
+  },
+  {
+   "requirement": "tech-electives",
+   "note": "\"Approved\" technical electives: GradTrellis accepts any CS/SWE course of 3 ch or more that BCS students may take for credit. FCS may keep a list of exceptions that isn't in the calendar."
+  },
+  {
+   "requirement": "honours",
+   "note": "Honours raises the 4th-year count to 2. GradTrellis assumes the base rule that CS 4983 doesn't count as a 4th-year course still applies."
+  },
+  {
+   "requirement": "nonCredit",
+   "note": "ECE 2213, 2214, 2215 and 3221 are \"normally\" not counted. GradTrellis treats them as non-credit and says an exception needs Faculty approval."
+  },
+  {
+   "requirement": "program",
+   "note": "Calendar clause 4: the University may require enrolled students to meet revised requirements where practicable. Audits run against the entry-year calendar by default."
+  },
+  {
+   "requirement": "cs-1303",
+   "note": "MATH 2203 excludes CS 1303 for credit, but the BCS core doesn't list MATH 2203 as a substitute (the Minor in Computer Science does). A student with MATH 2203 and no CS 1303 is shown as needing a Faculty decision."
+  },
+  {
+   "requirement": "honours",
+   "note": "Honours tiers (First Class at 3.5) are checked against the exact CGPA. The calendar shows GPAs to one decimal place and doesn't say which value applies; when rounding would change the tier, the audit says so."
+  },
+  {
+   "requirement": "allocation",
+   "note": "When a course could fill more than one requirement, GradTrellis places it where it leaves the least work outstanding, filling named courses and specific requirements (technical electives, breadth, math options) before free electives. A course named by a requirement (e.g. a core course) is never used as an elective."
+  }
+ ]
+}

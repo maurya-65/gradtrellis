@@ -2,12 +2,13 @@ import { describe, expect, it } from "vitest";
 import { courseIndex as index, programs, snapshot } from "../src/catalog.ts";
 import { programForEntry, type Program, type Requirement, type Selector } from "../src/engine/index.ts";
 
-// named in the 2024-25 calendar but gone from the current listings
+// named in an encoded calendar but gone from the current listings
 const NOT_CURRENTLY_LISTED: Record<string, string> = {
+  "CS 1103": "Introduction to Databases, renumbered CS 1543",
   "CS 2704": "Saint John Data Analytics course, named in the non-credit list",
   "ECE 2213": "retired ECE course, named in the non-credit list",
   "MATH 3353": "Computational Algebra, on the Math Option B list but no longer listed",
-  "INFO 1103": "Saint John code, named only as an accepted substitute for CS 1103",
+  "INFO 1103": "Saint John code, named only as an accepted substitute for the databases course",
 };
 
 const bcs = (entry: { season: "Winter" | "Summer" | "Fall"; year: number }) => ({
@@ -85,9 +86,7 @@ describe("course snapshot", () => {
   });
 });
 
-describe("BCS 2024-2025 program", () => {
-  const p = programs.find((x) => x.id === "unb-fredericton-bcs-2024-2025")!;
-
+describe.each(programs)("$id", (p) => {
   it("has unique requirement ids", () => {
     const ids = allRequirements(p).map((r) => r.id);
     const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
@@ -106,7 +105,7 @@ describe("BCS 2024-2025 program", () => {
 
   it("every top-level requirement and designation cites the calendar", () => {
     for (const r of [...p.requirements, ...p.overlays]) expect(r.source, r.id).toBeDefined();
-    for (const d of p.designations) expect(d.source.page, d.id).toBeGreaterThan(0);
+    for (const d of p.designations) expect(d.source.url, d.id).toContain("unb.ca");
   });
 
   it("names only courses that exist, except retired ones with a listed replacement", () => {
@@ -136,13 +135,32 @@ describe("BCS 2024-2025 program", () => {
     }
   });
 
+});
+
+describe("choosing a calendar by entry term", () => {
   it("is chosen for a Sept 2024 entrant", () => {
     const { program, exact } = programForEntry(programs, bcs({ season: "Fall", year: 2024 }));
     expect(exact).toBe(true);
     expect(program.id).toBe("unb-fredericton-bcs-2024-2025");
   });
 
-  it("falls back to an earlier calendar and says so", () => {
-    expect(programForEntry(programs, bcs({ season: "Fall", year: 2026 })).exact).toBe(false);
+  it("is chosen for a Sept 2026 entrant", () => {
+    const { program, exact } = programForEntry(programs, bcs({ season: "Fall", year: 2026 }));
+    expect(exact).toBe(true);
+    expect(program.id).toBe("unb-fredericton-bcs-2026-2027");
+  });
+
+  it("has an exact calendar for every entry year from 2021 to 2026", () => {
+    for (const year of [2021, 2022, 2023, 2024, 2025, 2026]) {
+      const { program, exact } = programForEntry(programs, bcs({ season: "Fall", year }));
+      expect(exact, String(year)).toBe(true);
+      expect(program.calendarYear).toBe(`${year}-${year + 1}`);
+    }
+  });
+
+  it("falls back to the earliest calendar for an older entrant and says so", () => {
+    const { program, exact } = programForEntry(programs, bcs({ season: "Fall", year: 2019 }));
+    expect(exact).toBe(false);
+    expect(program.id).toBe("unb-fredericton-bcs-2021-2022");
   });
 });

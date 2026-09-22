@@ -6,9 +6,12 @@ Findings that shape the data model. Every rule in `data/programs` must trace bac
 
 | Document | URL | Notes |
 |---|---|---|
+| Undergraduate Calendar 2021-2022 (PDF) | https://www.unb.ca/secretariat/_assets/documents/calendar/undergradcalendar-2021-2022.pdf | BCS: PDF pp. 356–357 (printed 352–353). |
+| Undergraduate Calendar 2022-2023 (PDF) | https://www.unb.ca/secretariat/_assets/documents/calendar/undergradcalendar-2022-2023.pdf | BCS: PDF pp. 374–375 (printed 370–371). |
+| Undergraduate Calendar 2023-2024 (PDF) | https://www.unb.ca/secretariat/_assets/documents/calendar/undergradcalendar-2023-2024.pdf | BCS: PDF pp. 196–197 (printed 192–193). |
 | Undergraduate Calendar 2024-2025 (PDF) | https://www.unb.ca/secretariat/_assets/documents/calendar/undergradcalendar-2024-2025.pdf | BCS: PDF pp. 201–203 (printed pp. 197–199). Grading: PDF p. 39 (printed 35–36). Repeats: PDF p. 36–37. |
-| Undergraduate Calendar 2025-2026 (PDF) | https://www.unb.ca/secretariat/_assets/documents/calendar/undergradcalendar-2025-2026.pdf | Not yet encoded. |
-| Current calendar, BCS (HTML) | https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html | Current year only. The HTML archive for 2024-2025 returns 404; older years exist only as PDFs (see https://www.unb.ca/secretariat/calendar-archive.html). |
+| Undergraduate Calendar 2025-2026 (PDF) | https://www.unb.ca/secretariat/_assets/documents/calendar/undergradcalendar-2025-2026.pdf | BCS: PDF pp. 212–214 (printed 208–210). |
+| Undergraduate Calendar 2026-2027, BCS (HTML) | https://www.unb.ca/academics/calendar/undergraduate/current/frederictonprograms/bachelorofcomputerscience.html | Encoded as `bcs-2026-2027.json`. Published 16 March 2026; there is no 2026-2027 PDF. The site serves it under `current/`, so archive a copy before the next year replaces it. The HTML archive for 2024-2025 returns 404; older years exist only as PDFs (see https://www.unb.ca/secretariat/calendar-archive.html). |
 | Current calendar, course listings (HTML) | https://www.unb.ca/academics/calendar/undergraduate/current/frederictoncourses/ | One page per subject (e.g. `computer-science/index.html`). Each course is a `<table>` with code, title, credit string, `<course_description>`, `<course_prereq>`, `<course_coreq>`. The PDFs do **not** contain course descriptions or prereqs. |
 | Web timetable | https://es.unb.ca/apps/timetable/ | Sections, times, term offerings. Not scraped yet (M2/M5). |
 | FCS timetable | https://www.cs.unb.ca/course-timetable | CS-only term view. |
@@ -18,15 +21,30 @@ Findings that shape the data model. Every rule in `data/programs` must trace bac
 - **Degree requirements** follow the calendar in effect when the student **entered** the program (2024-2025 for a Sept 2024 entrant). Calendar clause 4 lets UNB impose revised requirements "where practicable", so the engine must be able to audit against a newer calendar on request.
 - **Course prerequisites** are enforced at registration, so they come from the calendar in effect for the **term the course is taken**. In practice that means the current course listings. Course data is therefore versioned by snapshot date, separately from program rules.
 
-## BCS 2024-2025 vs current calendar (differences seen so far)
+## What changed between calendars (2021-2022 to 2026-2027, all encoded)
 
-| Rule | 2024-2025 | Current (2026-27 HTML) |
-|---|---|---|
-| CS core | includes **CS 1103** Intro to Databases | includes **CS 1543** instead |
-| Common first year | CS 1073, 1083, 1103, 1203, 1303, MATH 1003/1053, 1013/1063, 3 breadth | differs; re-check when encoding current year |
-| Co-op eligibility | completed one year of study; 2.7 GPA in preceding study term | completed one term + CS 1083 enrolled/completed + orientation + 2.7 GPA + other conditions |
-| Math option B | STAT 2593 + one listed elective | same list, plus STAT 3093 appears in the list |
-| Breadth "strongly encouraged" | ENGL 1103, ENGL 1145 | ENGL 1103, 1144, 1145 |
+Everything not listed here is identical across all six years: the 40-course/133 ch total, the C minimum, the
+7 technical electives with their level and programming counts, the 10-course breadth pool, 4 free electives,
+the 12 ch writing requirement, the load advice and the Honours rules.
+
+| Rule | 2021-2022 | 2022-2023 | 2023-2024 | 2024-2025 | 2025-2026 | 2026-2027 |
+|---|---|---|---|---|---|---|
+| Three-fail rule | none | yes | yes | yes | yes | yes, "withdraw from the Faculty" after Faculty review |
+| Non-credit list | no CS 2704, no MATH 1843 | full list | full list | full list | full list | full list |
+| Math Option B electives | no MATH 4503 | + MATH 4503 | same | same | + STAT 3093 | + STAT 3093 |
+| Cybersecurity courses | six fixed: CS 2413, 4335, 4411, 4417, 4419, 4865 | same six | CS 2413, 4335, 4411, 4417, 4865 + one of 4413/4415/4419 | CS 4355 replaces 4335 | same | same |
+| Databases core course | CS 1103 | CS 1103 | CS 1103 | CS 1103 | CS 1103 | **CS 1543** |
+| Programming marker | [P] | [P] | (P) | (P) | (P) | [P] |
+
+Wording-only differences (no rule change): "credit hours' worth" up to 2023-2024, "Software Engineering I" as the
+title of CS 2043, "Cybersecuirty" misspelled in the heading up to 2023-2024, and "an extensive computer
+programming component" in 2021-2022.
+
+### CS 4335 doesn't exist
+
+The 2021-2022 to 2023-2024 calendars name **CS 4335** in the cybersecurity specialization. That code has never
+appeared in the course listings; **CS 4355 Cryptanalysis and Database Security** holds the same position from
+2024-2025 on. The program files accept CS 4355 for it, unconfirmed, so the audit flags it for review. Ask FCS.
 
 ## Courses named in the 2024-2025 BCS rules that have changed
 

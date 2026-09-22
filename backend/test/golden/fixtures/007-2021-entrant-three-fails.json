@@ -1,0 +1,93 @@
+{
+  "id": "007-2021-entrant-three-fails",
+  "description": "A Fall 2021 entrant who fails the same course three times. The 2021-2022 calendar has no three-fail rule, so only the attempt limit is raised.",
+  "provenance": "synthetic",
+  "reviewedBy": [],
+  "asOf": {
+    "season": "Fall",
+    "year": 2022
+  },
+  "record": {
+    "id": "golden-007",
+    "program": {
+      "institution": "unb",
+      "campus": "fredericton",
+      "code": "BCS",
+      "entry": {
+        "season": "Fall",
+        "year": 2021
+      }
+    },
+    "attempts": [
+      {
+        "code": "CS 1073",
+        "term": {
+          "season": "Fall",
+          "year": 2021
+        },
+        "result": "F"
+      },
+      {
+        "code": "CS 1073",
+        "term": {
+          "season": "Winter",
+          "year": 2022
+        },
+        "result": "F"
+      },
+      {
+        "code": "CS 1073",
+        "term": {
+          "season": "Summer",
+          "year": 2022
+        },
+        "result": "F"
+      },
+      {
+        "code": "CS 1303",
+        "term": {
+          "season": "Fall",
+          "year": 2021
+        },
+        "result": "B"
+      }
+    ]
+  },
+  "expect": {
+    "cgpa": "0.8",
+    "cgpaWorking": "CS 1073 F three times: 0 points over 4+4+4 = 12 ch. CS 1303 B: 3.0 x 4 ch = 12 points over 4 ch. 12 points over 16 ch = 0.75, shown as 0.8",
+    "warnings": [
+      "max-attempts",
+      "reduced-load"
+    ],
+    "warningNotes": "Three attempts reaches the attempt limit in the grading rules, and a 0.75 GPA is below the 2.7 the calendar sets for a reduced course load. The three-fail rule that applies from 2022-2023 on is not in the 2021-2022 calendar, so there is no fail-limit warning.",
+    "audit": {
+      "status": "incomplete",
+      "totals": {
+        "courses": {
+          "have": 1,
+          "inProgress": 0
+        },
+        "creditHours": {
+          "have": 4,
+          "inProgress": 0
+        },
+        "working": "only CS 1303 (4 ch) passed; the three CS 1073 attempts are below the C minimum"
+      },
+      "requirements": {
+        "cs-core": {
+          "status": "incomplete",
+          "used": [
+            "CS 1303"
+          ]
+        }
+      },
+      "notCounted": [
+        "CS 1073",
+        "CS 1073",
+        "CS 1073"
+      ],
+      "notes": "Every BCS requirement needs a C or better, so all three failed attempts count toward nothing."
+    }
+  }
+}
