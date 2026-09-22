@@ -1,7 +1,7 @@
 import { Router, type Response } from "express";
 import { z } from "zod";
 import { courseIndex, gradingScale, programs } from "../catalog.ts";
-import { Attempt, normalizeCourseCode, runAudit, StudentRecord, Term } from "../engine/index.ts";
+import { Attempt, normalizeCourseCode, runAudit, StudentRecord, Term, termOn } from "../engine/index.ts";
 import { addAttempt, createStudent, deleteAttempt, getStudent, replaceAttempts, updateDesignations } from "../queries/students.ts";
 
 // accepts "cs1073" as well as "CS 1073"
@@ -104,6 +104,11 @@ studentsRouter.delete("/:id/attempts/:attemptId", async (req, res) => {
 studentsRouter.get("/:id/audit", async (req, res) => {
   const student = await getStudent(req.params.id);
   if (!student) return notFound(res);
-  const audit = runAudit(StudentRecord.parse(student), { programs, index: courseIndex, scale: gradingScale });
+  const audit = runAudit(StudentRecord.parse(student), {
+    programs,
+    index: courseIndex,
+    scale: gradingScale,
+    asOf: termOn(new Date()),
+  });
   res.json({ audit });
 });

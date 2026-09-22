@@ -7,20 +7,24 @@ type Status = Requirement["status"];
 const DOT: Record<Status, string> = {
   complete: "bg-teal-700",
   "in-progress": "bg-sky-400",
+  planned: "bg-violet-300",
   review: "bg-amber-500",
   incomplete: "bg-slate-300",
 };
 
-function CourseChip({ code, state, note }: { code: string; state: "completed" | "in-progress"; note?: string | undefined }) {
+const CHIP: Record<Requirement["used"][number]["state"], string> = {
+  completed: "border-teal-700/20 bg-teal-50 text-teal-900",
+  "in-progress": "border-dashed border-sky-600/60 bg-sky-50 text-sky-900",
+  planned: "border-dashed border-violet-600/50 bg-violet-50 text-violet-900",
+};
+
+function CourseChip({ code, state, note }: { code: string; state: Requirement["used"][number]["state"]; note?: string | undefined }) {
   return (
-    <span
-      title={note}
-      className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-xs ${
-        state === "completed" ? "border-teal-700/20 bg-teal-50 text-teal-900" : "border-dashed border-sky-600/60 bg-sky-50 text-sky-900"
-      }`}
-    >
+    <span title={note} className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-xs ${CHIP[state]}`}>
       {code}
-      {state === "in-progress" && <span className="ml-1 font-sans text-[10px] uppercase tracking-wide text-sky-700">in progress</span>}
+      {state !== "completed" && (
+        <span className="ml-1 font-sans text-[10px] uppercase tracking-wide opacity-80">{state === "planned" ? "planned" : "in progress"}</span>
+      )}
     </span>
   );
 }
@@ -61,6 +65,7 @@ function Checklist({ rows }: { rows: Row[] }) {
           {row.note && <span className="text-xs text-slate-600">{row.note}</span>}
           {row.status === "review" && <span className="text-xs text-amber-800">needs review</span>}
           {row.status === "in-progress" && <span className="text-xs text-sky-700">in progress</span>}
+          {row.status === "planned" && <span className="text-xs text-violet-700">planned</span>}
         </li>
       ))}
     </ul>

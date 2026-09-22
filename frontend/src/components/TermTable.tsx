@@ -1,4 +1,5 @@
 import type { StoredAttempt } from "../api/client.ts";
+import { resultLabel } from "./terms.ts";
 
 interface Props {
   label: string;
@@ -25,7 +26,7 @@ export function TermTable({ label, attempts, onRemove }: Props) {
                 <span className="font-mono font-medium text-slate-900">{a.code}</span>
                 {a.title && <span className="ml-2 text-slate-600">{a.title}</span>}
               </td>
-              <td className="px-4 py-2.5 text-right font-medium text-slate-800">{a.result === "IP" ? "In progress" : a.result}</td>
+              <td className="px-4 py-2.5 text-right font-medium text-slate-800">{resultLabel(a.result, a.term)}</td>
               <td className="w-20 px-4 py-2.5 text-right">
                 <button onClick={() => onRemove(a)} className="text-xs font-medium text-red-700 hover:underline" aria-label={`Remove ${a.code} ${label}`}>
                   Remove

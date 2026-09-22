@@ -122,7 +122,7 @@ export function poolAccepts(slot: PoolSlot, c: UsableCourse, ctx: AllocationCont
 
 export function courseSlotAccepts(slot: CourseSlot, c: UsableCourse, ctx: AllocationContext): boolean {
   if (!slot.codes.includes(c.code)) return false;
-  if (!slot.minGrade || c.state === "in-progress") return true;
+  if (!slot.minGrade || c.state !== "completed") return true;
   return meetsGrade(c.attempt, slot.minGrade, ctx.scale) === true;
 }
 
@@ -160,7 +160,7 @@ export function measurePool(slot: PoolSlot, courses: UsableCourse[], ctx: Alloca
 
   const mustInclude = slot.mustInclude.map((m) => {
     const hit = courses.find((x) => x.code === m.code);
-    const met = !!hit && (!m.minGrade || hit.state === "in-progress" || meetsGrade(hit.attempt, m.minGrade, ctx.scale) === true);
+    const met = !!hit && (!m.minGrade || hit.state !== "completed" || meetsGrade(hit.attempt, m.minGrade, ctx.scale) === true);
     if (!met) gaps.push(1);
     return { ...m, met };
   });

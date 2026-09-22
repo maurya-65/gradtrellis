@@ -18,6 +18,12 @@ export function termLabel(t: Term): string {
   return `${t.season} ${t.year}`;
 }
 
+// Winter is Jan-Apr, Summer May-Aug, Fall Sep-Dec
+export function termOn(date: Date): Term {
+  const month = date.getMonth();
+  return { season: month < 4 ? "Winter" : month < 8 ? "Summer" : "Fall", year: date.getFullYear() };
+}
+
 // Fall 2024, Winter 2025 and Summer 2025 are all "2024-2025"
 export function calendarYearOf(t: Term): string {
   const start = t.season === "Fall" ? t.year : t.year - 1;

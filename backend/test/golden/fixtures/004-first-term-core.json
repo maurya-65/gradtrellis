@@ -3,6 +3,10 @@
   "description": "First-year core courses only: the CS core is started but incomplete.",
   "provenance": "synthetic",
   "reviewedBy": [],
+  "asOf": {
+    "season": "Winter",
+    "year": 2025
+  },
   "record": {
     "id": "golden-004",
     "program": {

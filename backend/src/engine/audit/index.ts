@@ -7,7 +7,8 @@ import type { GradingScale } from "../schema/grades.ts";
 import type { Program } from "../schema/program.ts";
 import { activeSlots, allChoices, allocate, compareScores, type AllocationContext, type Assignment, type Choice, type Score } from "./allocate.ts";
 import { evaluateRequirement, worstStatus, type EvalEnv } from "./evaluate.ts";
-import type { AuditResult, DesignationResult, RequirementStatus, Totals } from "./types.ts";
+import type { Term } from "../terms.ts";
+import type { AuditResult, DesignationResult, RequirementStatus, Totals, UsableCourse } from "./types.ts";
 import { usableCourses } from "./usable.ts";
 
 export * from "./types.ts";
@@ -17,6 +18,8 @@ type Designation = Program["designations"][number];
 
 export interface AuditOptions {
   programs: Program[];
+  // the current term; courses registered for later terms are "planned"
+  asOf: Term;
   index: CourseIndex;
   scale: GradingScale;
 }
@@ -27,7 +30,7 @@ export function runAudit(record: StudentRecord, opts: AuditOptions): AuditResult
   const program = found.program;
 
   const ctx: AllocationContext = { scale };
-  const { usable, notCounted } = usableCourses(record, program, index, scale);
+  const { usable, notCounted } = usableCourses(record, program, index, scale, opts.asOf);
   const byCode = new Map(usable.map((c) => [c.code, c]));
   const cgpa = cumulativeGpa(record, index, scale);
 
@@ -127,17 +130,27 @@ function findRequirement(reqs: Program["requirements"], id: string): Program["re
   return undefined;
 }
 
-function computeTotals(program: Program, counted: ReturnType<typeof usableCourses>["usable"]): Totals {
-  const done = counted.filter((c) => c.state === "completed");
-  const running = counted.filter((c) => c.state === "in-progress");
-  const sum = (xs: typeof counted, f: (c: (typeof counted)[number]) => number) => xs.reduce((n, c) => n + f(c), 0);
-  const courses = { have: sum(done, (c) => c.weight), inProgress: sum(running, (c) => c.weight), need: program.totals.minCourses };
-  const creditHours = { have: sum(done, (c) => c.facts.creditHours), inProgress: sum(running, (c) => c.facts.creditHours), need: program.totals.minCreditHours };
-  const status: RequirementStatus =
-    courses.have >= courses.need && creditHours.have >= creditHours.need
-      ? "complete"
-      : courses.have + courses.inProgress >= courses.need && creditHours.have + creditHours.inProgress >= creditHours.need
-        ? "in-progress"
+function computeTotals(program: Program, counted: UsableCourse[]): Totals {
+  const total = (state: UsableCourse["state"], f: (c: UsableCourse) => number) =>
+    counted.filter((c) => c.state === state).reduce((n, c) => n + f(c), 0);
+  const count = (f: (c: UsableCourse) => number, need: number) => ({
+    have: total("completed", f),
+    inProgress: total("in-progress", f),
+    planned: total("planned", f),
+    need,
+  });
+  const courses = count((c) => c.weight, program.totals.minCourses);
+  const creditHours = count((c) => c.facts.creditHours, program.totals.minCreditHours);
+
+  // met counting completed courses only, then adding in-progress, then planned
+  const metWith = (parts: Array<"have" | "inProgress" | "planned">) =>
+    [courses, creditHours].every((t) => parts.reduce((n, k) => n + t[k], 0) >= t.need);
+  const status: RequirementStatus = metWith(["have"])
+    ? "complete"
+    : metWith(["have", "inProgress"])
+      ? "in-progress"
+      : metWith(["have", "inProgress", "planned"])
+        ? "planned"
         : "incomplete";
   return { courses, creditHours, status };
 }

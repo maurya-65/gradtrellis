@@ -28,10 +28,21 @@ export interface EvalEnv {
   program: Program;
 }
 
-const ORDER: RequirementStatus[] = ["complete", "in-progress", "review", "incomplete"];
+const ORDER: RequirementStatus[] = ["complete", "in-progress", "planned", "review", "incomplete"];
 
 export function worstStatus(statuses: RequirementStatus[]): RequirementStatus {
   return statuses.reduce<RequirementStatus>((w, s) => (ORDER.indexOf(s) > ORDER.indexOf(w) ? s : w), "complete");
+}
+
+// "in progress: CS 2263; planned: CS 3413"
+function pendingText(courses: Array<{ code: CourseCode; state: UsableCourse["state"] }>): string {
+  return (["in-progress", "planned"] as const)
+    .map((state) => {
+      const codes = courses.filter((c) => c.state === state).map((c) => c.code);
+      return codes.length ? `${state === "in-progress" ? "in progress" : "planned"}: ${codes.join(", ")}` : "";
+    })
+    .filter(Boolean)
+    .join("; ");
 }
 
 function used(c: UsableCourse, note?: string): UsedCourse {
@@ -60,13 +71,13 @@ export function evaluateRequirement(req: Requirement, env: EvalEnv): Requirement
       const missing = children.filter((c) => c.status === "incomplete");
       const missingCourses = missing.filter((c) => c.kind === "course").map((c) => c.title);
       const missingOther = missing.filter((c) => c.kind !== "course").map((c) => `${c.title}: ${c.remaining}`);
-      const running = children.filter((c) => c.status === "in-progress").flatMap((c) => c.used.map((u) => u.code));
+      const pending = pendingText(children.filter((c) => c.status === "in-progress" || c.status === "planned").flatMap((c) => c.used));
       const toReview = children.filter((c) => c.status === "review" && c.remaining).map((c) => c.remaining);
       const parts = [
         missingCourses.length ? `${missingCourses.join(", ")} remaining` : "",
         ...missingOther,
         ...toReview,
-        running.length && !missing.length ? `in progress: ${running.join(", ")}` : "",
+        !missing.length ? pending : "",
       ].filter(Boolean);
       return { ...base, kind: "allOf", title: req.title, status, remaining: parts.join("; "), used: children.flatMap((c) => c.used), children };
     }
@@ -129,14 +140,14 @@ function evaluateCourse(req: CourseRequirement, env: EvalEnv): RequirementResult
   const substitute = course.code !== req.code;
   const note = substitute ? `accepted for ${req.code}: ${req.acceptAlso?.reason ?? ""}` : undefined;
   const status: RequirementStatus =
-    substitute && req.acceptAlso && !req.acceptAlso.confirmed ? "review" : course.state === "completed" ? "complete" : "in-progress";
+    substitute && req.acceptAlso && !req.acceptAlso.confirmed ? "review" : course.state === "completed" ? "complete" : course.state;
   if (status === "review") base.notes.push(`${course.code} for ${req.code} is GradTrellis's reading of the calendar, not confirmed by the Faculty`);
   return {
     ...base,
     kind: "course",
     title: req.code,
     status,
-    remaining: status === "in-progress" ? `${course.code} in progress` : "",
+    remaining: status === "in-progress" || status === "planned" ? pendingText([course]) : "",
     used: [used(course, note)],
   };
 }
@@ -166,7 +177,9 @@ function evaluatePool(req: PoolRequirement, env: EvalEnv): RequirementResult {
   const courses = env.assignment ? assignedTo(env, req.id) : env.usable.filter((c) => poolAccepts(slot, c, env.ctx) === "yes");
   const all = measurePool(slot, courses, env.ctx);
   const done = measurePool(slot, courses.filter((c) => c.state === "completed"), env.ctx);
-  const status: RequirementStatus = all.deficit > 1e-9 ? "incomplete" : done.deficit > 1e-9 ? "in-progress" : "complete";
+  const current = measurePool(slot, courses.filter((c) => c.state !== "planned"), env.ctx);
+  const status: RequirementStatus =
+    all.deficit > 1e-9 ? "incomplete" : done.deficit <= 1e-9 ? "complete" : current.deficit <= 1e-9 ? "in-progress" : "planned";
   const { kept, surplus } = splitSurplus(slot, courses, env);
   const couldCount = approvalCandidates(slot, courses, env);
 
@@ -178,7 +191,7 @@ function evaluatePool(req: PoolRequirement, env: EvalEnv): RequirementResult {
     remaining: poolRemaining(status, pool, all, courses),
     used: kept.map((c) => used(c)),
     surplus: surplus.length ? surplus.map((c) => used(c)) : undefined,
-    constraints: constraintResults(all, done),
+    constraints: constraintResults(all, current, done),
     couldCountWithApproval: couldCount.length ? couldCount : undefined,
     source: pool.source,
   };
@@ -193,7 +206,7 @@ function poolSlotFor(req: PoolRequirement, env: EvalEnv): PoolSlot {
 
 function poolRemaining(status: RequirementStatus, pool: PoolRequirement, all: PoolMeasure, courses: UsableCourse[]): string {
   if (status === "complete") return "";
-  if (status === "in-progress") return `in progress: ${courses.filter((c) => c.state === "in-progress").map((c) => c.code).join(", ")}`;
+  if (status === "in-progress" || status === "planned") return pendingText(courses);
 
   const parts: string[] = [];
   if (pool.minCourses && all.courses < pool.minCourses) {
@@ -219,10 +232,11 @@ function approvalCandidates(slot: PoolSlot, courses: UsableCourse[], env: EvalEn
     .map((c) => ({ code: c.code, by }));
 }
 
-function constraintResults(all: PoolMeasure, done: PoolMeasure): ConstraintResult[] {
+function constraintResults(all: PoolMeasure, current: PoolMeasure, done: PoolMeasure): ConstraintResult[] {
   return all.constraints.map((c) => {
-    const completed = done.constraints.find((d) => d.c.id === c.c.id)!;
-    const status: RequirementStatus = c.have < c.need ? "incomplete" : completed.have >= c.need ? "complete" : "in-progress";
+    const have = (m: PoolMeasure) => m.constraints.find((d) => d.c.id === c.c.id)!.have;
+    const status: RequirementStatus =
+      c.have < c.need ? "incomplete" : have(done) >= c.need ? "complete" : have(current) >= c.need ? "in-progress" : "planned";
     return { id: c.c.id, title: c.c.title, have: c.have, need: c.need, unit: c.unit, status };
   });
 }
@@ -242,7 +256,7 @@ function splitSurplus(slot: PoolSlot, courses: UsableCourse[], env: EvalEnv): { 
   const kept = [...courses];
   const surplus: UsableCourse[] = [];
   const candidates = [...courses].sort(
-    (a, b) => Number(b.state === "in-progress") - Number(a.state === "in-progress") || a.facts.creditHours - b.facts.creditHours || b.code.localeCompare(a.code),
+    (a, b) => Number(b.state !== "completed") - Number(a.state !== "completed") || a.facts.creditHours - b.facts.creditHours || b.code.localeCompare(a.code),
   );
   for (const c of candidates) {
     const without = kept.filter((k) => k !== c);

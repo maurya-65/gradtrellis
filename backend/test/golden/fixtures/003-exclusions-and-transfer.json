@@ -3,6 +3,10 @@
   "description": "Took MATH 2203 instead of CS 1303, CS 1093 (never BCS credit) in first term, and has transfer credit for ENGL 1145.",
   "provenance": "synthetic",
   "reviewedBy": [],
+  "asOf": {
+    "season": "Winter",
+    "year": 2025
+  },
   "record": {
     "id": "golden-003",
     "program": {

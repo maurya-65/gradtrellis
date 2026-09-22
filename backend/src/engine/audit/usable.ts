@@ -12,7 +12,7 @@ export interface UsableSet {
 }
 
 // One entry per course that can count; everything else goes to notCounted with a reason.
-export function usableCourses(record: StudentRecord, program: Program, index: CourseIndex, scale: GradingScale): UsableSet {
+export function usableCourses(record: StudentRecord, program: Program, index: CourseIndex, scale: GradingScale, asOf: Term): UsableSet {
   const notCounted: NotCounted[] = [];
   const skip = (a: Attempt, reason: string) => notCounted.push({ code: a.code, term: a.term, result: a.result, reason });
 
@@ -48,10 +48,11 @@ export function usableCourses(record: StudentRecord, program: Program, index: Co
       .sort((x, y) => points(y, scale) - points(x, scale))[0];
     const running = attempts.find(isInProgress);
     const chosen = good ?? running;
+    const state: UsableCourse["state"] = chosen === good ? "completed" : chosen && compareTerms(chosen.term, asOf) > 0 ? "planned" : "in-progress";
 
     for (const a of attempts) {
       if (a === chosen) continue;
-      if (chosen && compareTerms(a.term, chosen.term) < 0) skip(a, `repeated; the ${chosen.result === "IP" ? "current" : "later"} attempt counts`);
+      if (chosen && compareTerms(a.term, chosen.term) < 0) skip(a, `repeated; the ${state === "planned" ? "planned" : chosen.result === "IP" ? "current" : "later"} attempt counts`);
       else if (chosen) skip(a, `repeated; the ${chosen.result} attempt counts`);
       else skip(a, reasonNotCounted(a, program, scale));
     }
@@ -62,7 +63,7 @@ export function usableCourses(record: StudentRecord, program: Program, index: Co
       code,
       facts,
       attempt: chosen,
-      state: chosen === good ? "completed" : "in-progress",
+      state,
       weight: facts.creditHours >= 6 ? 2 : 1,
       notes,
     });
@@ -102,7 +103,7 @@ function points(a: Attempt, scale: GradingScale): number {
 }
 
 function rankState(c: UsableCourse): number {
-  return c.state === "completed" ? 0 : 1;
+  return ["completed", "in-progress", "planned"].indexOf(c.state);
 }
 
 function reasonNotCounted(a: Attempt, program: Program, scale: GradingScale): string {

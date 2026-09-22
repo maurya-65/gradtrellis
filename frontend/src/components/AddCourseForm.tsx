@@ -1,8 +1,8 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { api, ApiError, type CourseSummary, type Result, type Season, type Student } from "../api/client.ts";
 import { CourseSearch } from "./CourseSearch.tsx";
-import { compareTerms, termLabel } from "backend/engine/terms";
-import { currentTerm, RESULTS, termOptions } from "./terms.ts";
+import { compareTerms, termLabel, termOn } from "backend/engine/terms";
+import { resultOptions, termOptions } from "./terms.ts";
 
 type Selected = { code: string; title?: string; creditHours?: number; listed: boolean };
 
@@ -21,13 +21,14 @@ export function AddCourseForm({ student, onAdded }: Props) {
 
   const terms = useMemo(() => termOptions(student.program.entry), [student]);
   // Default to the current term (or the entry term, if that's later).
-  const defaultTerm = compareTerms(currentTerm(), student.program.entry) >= 0 ? currentTerm() : student.program.entry;
+  const now = termOn(new Date());
+  const defaultTerm = compareTerms(now, student.program.entry) >= 0 ? now : student.program.entry;
   const chosenTerm = term || termLabel(defaultTerm);
+  const [season, year] = chosenTerm.split(" ") as [Season, string];
 
   const add = async (e: FormEvent) => {
     e.preventDefault();
     if (!selected) return;
-    const [season, year] = chosenTerm.split(" ") as [Season, string];
     setBusy(true);
     setError(null);
     try {
@@ -90,7 +91,7 @@ export function AddCourseForm({ student, onAdded }: Props) {
             Grade
           </label>
           <select id="result" className={`w-full ${field}`} value={result} onChange={(e) => setResult(e.target.value as Result)}>
-            {RESULTS.map((r) => (
+            {resultOptions({ season, year: Number(year) }).map((r) => (
               <option key={r.value} value={r.value}>
                 {r.label}
               </option>

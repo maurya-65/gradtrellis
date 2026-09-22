@@ -3,6 +3,10 @@
   "description": "Struggling first year: CS 1083 failed then D, now on a third attempt. MATH 1013 D then withdrawn. CGPA under 2.7.",
   "provenance": "synthetic",
   "reviewedBy": [],
+  "asOf": {
+    "season": "Fall",
+    "year": 2025
+  },
   "record": {
     "id": "golden-002",
     "program": {

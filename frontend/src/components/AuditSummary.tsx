@@ -5,6 +5,7 @@ import { StatusBadge } from "./StatusBadge.tsx";
 const SUMMARY: Record<AuditResult["status"], string> = {
   complete: "All degree requirements are met.",
   "in-progress": "Everything left is in progress. You're on track if you pass your current courses.",
+  planned: "Everything left is in progress or planned. You're on track if you pass your current and planned courses.",
   review: "Some requirements need a decision from the Faculty. See the items marked for review.",
   incomplete: "Here's what you still need.",
 };
@@ -32,14 +33,8 @@ export function AuditSummary({ audit }: { audit: AuditResult }) {
         </p>
       )}
       <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <ProgressBar label="Courses" have={audit.totals.courses.have} inProgress={audit.totals.courses.inProgress} need={audit.totals.courses.need} unit="courses" />
-        <ProgressBar
-          label="Credit hours"
-          have={audit.totals.creditHours.have}
-          inProgress={audit.totals.creditHours.inProgress}
-          need={audit.totals.creditHours.need}
-          unit="ch"
-        />
+        <ProgressBar label="Courses" totals={audit.totals.courses} unit="courses" />
+        <ProgressBar label="Credit hours" totals={audit.totals.creditHours} unit="ch" />
       </div>
     </header>
   );

@@ -1,9 +1,5 @@
-import { compareTerms, SEASONS, type Term } from "backend/engine/terms";
-
-export function currentTerm(now = new Date()): Term {
-  const m = now.getMonth();
-  return { season: m < 4 ? "Winter" : m < 8 ? "Summer" : "Fall", year: now.getFullYear() };
-}
+import type { Result } from "../api/client.ts";
+import { compareTerms, SEASONS, termOn, type Term } from "backend/engine/terms";
 
 // entry term through next year, newest first
 export function termOptions(entry: Term, now = new Date()): Term[] {
@@ -35,3 +31,17 @@ export const RESULTS = [
   { value: "NCR", label: "NCR (no credit)" },
   { value: "TR", label: "Transfer credit" },
 ] as const;
+
+// IP is UNB's code for "no grade yet"; before the term starts, that's a planned course
+export function isPlanned(term: Term, now = new Date()): boolean {
+  return compareTerms(term, termOn(now)) > 0;
+}
+
+export function resultLabel(result: Result, term: Term): string {
+  if (result !== "IP") return result;
+  return isPlanned(term) ? "Planned" : "In progress";
+}
+
+export function resultOptions(term: Term) {
+  return RESULTS.map((r) => ({ value: r.value, label: r.value === "IP" ? resultLabel("IP", term) : r.label }));
+}

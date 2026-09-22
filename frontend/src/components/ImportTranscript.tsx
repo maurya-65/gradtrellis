@@ -4,7 +4,7 @@ import { api, type Result, type Student } from "../api/client.ts";
 import { useStudent } from "../hooks/useStudent.tsx";
 import { parseTranscript, type ParsedAttempt } from "../transcript/parse.ts";
 import { readPdfLines } from "../transcript/pdf.ts";
-import { RESULTS } from "./terms.ts";
+import { resultOptions } from "./terms.ts";
 
 // The PDF is read in the browser; only the course lines are sent to the server.
 export function ImportTranscript({ student }: { student: Student }) {
@@ -79,7 +79,7 @@ export function ImportTranscript({ student }: { student: Student }) {
     <div className="rounded-lg border border-teal-600 bg-white p-5 shadow-sm">
       <h2 className="text-base font-semibold text-slate-900">Check your courses</h2>
       <p className="mt-1 text-sm text-slate-700">
-        Found {attempts.length} courses. Courses without a grade are marked in progress. Fix anything that looks wrong, then save.
+        Found {attempts.length} courses. Courses without a grade are in progress, or planned if their term hasn't started. Fix anything that looks wrong, then save.
       </p>
 
       {unreadable.length > 0 && (
@@ -119,7 +119,7 @@ export function ImportTranscript({ student }: { student: Student }) {
                   value={a.result}
                   onChange={(e) => setResult(i, e.target.value as Result)}
                 >
-                  {RESULTS.map((r) => (
+                  {resultOptions(a.term).map((r) => (
                     <option key={r.value} value={r.value}>
                       {r.label}
                     </option>

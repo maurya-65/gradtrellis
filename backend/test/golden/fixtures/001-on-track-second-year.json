@@ -3,6 +3,10 @@
   "description": "Sept 2024 entrant, clean first year, second-year core in progress. Took CS 1103 before it was renumbered to CS 1543.",
   "provenance": "synthetic",
   "reviewedBy": [],
+  "asOf": {
+    "season": "Fall",
+    "year": 2025
+  },
   "record": {
     "id": "golden-001",
     "program": {

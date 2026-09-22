@@ -9,7 +9,8 @@ export interface UsableCourse {
   code: CourseCode;
   facts: CourseFacts;
   attempt: Attempt;
-  state: "completed" | "in-progress";
+  // planned = registered for a term that hasn't started yet
+  state: "completed" | "in-progress" | "planned";
   // 2 for 6 ch courses
   weight: number;
   notes: string[];
@@ -22,8 +23,9 @@ export interface NotCounted {
   reason: string;
 }
 
+// in-progress/planned = met once the current/future courses are passed;
 // review = only satisfied if someone at the Faculty confirms something
-export type RequirementStatus = "complete" | "in-progress" | "incomplete" | "review";
+export type RequirementStatus = "complete" | "in-progress" | "planned" | "incomplete" | "review";
 
 export interface UsedCourse {
   code: CourseCode;
@@ -69,8 +71,8 @@ export interface DesignationResult {
 }
 
 export interface Totals {
-  courses: { have: number; inProgress: number; need: number };
-  creditHours: { have: number; inProgress: number; need: number };
+  courses: { have: number; inProgress: number; planned: number; need: number };
+  creditHours: { have: number; inProgress: number; planned: number; need: number };
   status: RequirementStatus;
 }
 

@@ -13,6 +13,8 @@ export const S25 = T("Summer", 2025);
 export const F25 = T("Fall", 2025);
 export const W26 = T("Winter", 2026);
 export const F26 = T("Fall", 2026);
+// "today" for the tests; anything after it is planned
+export const NOW = F26;
 
 export function att(code: string, term: { season: Season; year: number }, result: Result, extra: Partial<Attempt> = {}): StudentRecordInput["attempts"][number] {
   return { code, term, result, ...extra };

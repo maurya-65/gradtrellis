@@ -5,6 +5,7 @@ import { z } from "zod";
 import { courseIndex as index, gradingScale as scale, programs } from "../../src/catalog.ts";
 import {
   CourseCode,
+  Term,
   cumulativeGpa,
   policyWarnings,
   programForEntry,
@@ -40,6 +41,8 @@ const GoldenCase = z.object({
   description: z.string(),
   provenance: z.enum(["synthetic", "anonymized-real"]),
   reviewedBy: z.array(z.string()),
+  // the term the expected values were worked out in
+  asOf: Term,
   record: StudentRecord,
   expect: z.object({
     cgpa: z.string(),
@@ -101,7 +104,7 @@ describe("golden student histories", () => {
 
       const audit = data.expect.audit;
       describe("degree audit", () => {
-        const result = runAudit(record, { programs, index, scale });
+        const result = runAudit(record, { programs, index, scale, asOf: data.asOf });
 
         it(`overall status is ${audit.status}`, () => {
           expect(result.status).toBe(audit.status);

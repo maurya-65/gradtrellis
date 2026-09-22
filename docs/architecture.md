@@ -48,9 +48,9 @@ Prerequisites are stored as raw text only. Parsing them and checking eligibility
 
 `engine/audit` answers which requirement each course fills and what is left.
 
-1. **Usable courses.** Each course counts once, from its best attempt. Grades below the program minimum, withdrawals, non-credit courses, credit restrictions and credit exclusions ("credit for only one of") are set aside with a reason.
+1. **Usable courses.** Each course counts once, from its best attempt. A course with no grade yet is in progress, or planned if its term is after the current one; the server passes the current term in, so the engine never reads the clock. Grades below the program minimum, withdrawals, non-credit courses, credit restrictions and credit exclusions ("credit for only one of") are set aside with a reason.
 2. **Allocation.** Named-course requirements (core, math) take their course first, and pools never take a course a requirement names. Pools (technical electives, breadth, free electives) then compete for the rest. A placement is scored by outstanding work, with specific requirements ahead of free electives. The score counts in-progress courses as passed first, then only completed courses. A greedy fill is refined by moves and swaps, and every combination of alternatives (Math Option A or B, ...) is tried. `test/engine/allocate.test.ts` checks the result against exhaustive search on random records.
-3. **Evaluation.** Each requirement reports its status, the courses used, what remains in plain language and its calendar source. Overlays (the writing requirement) and designations are checked against all usable courses without consuming them. Honours tightens the technical elective rules through patches in the program data.
+3. **Evaluation.** Each requirement reports its status (complete, in progress, planned, needs review or incomplete), the courses used, what remains in plain language and its calendar source. Overlays (the writing requirement) and designations are checked against all usable courses without consuming them. Honours tightens the technical elective rules through patches in the program data.
 
 Policy warnings: the BCS three-fail rule, the three-attempt limit and the reduced load below a 2.0 CGPA.
 

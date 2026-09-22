@@ -3,6 +3,10 @@
   "description": "Projected complete degree (Sept 2024 entry, eight study terms): Honours plus the Cybersecurity specialization, Math Option A, a 6 ch breadth course, a failed-then-passed core course and a credit exclusion.",
   "provenance": "synthetic",
   "reviewedBy": [],
+  "asOf": {
+    "season": "Winter",
+    "year": 2028
+  },
   "record": {
     "id": "golden-005",
     "program": {
