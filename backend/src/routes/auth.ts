@@ -1,7 +1,8 @@
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 import { checkPassword, endSession, hashPassword, hashToken, newToken, requireUser, SESSION_DAYS, setSessionCookie } from "../auth.ts";
-import { sendEmail } from "../email.ts";
+import { appUrl, sendEmail } from "../email.ts";
+import { fullName, nameMatches } from "../names.ts";
 import { getStudentForUser } from "../queries/students.ts";
 import {
   confirmSignup,
@@ -9,16 +10,15 @@ import {
   deleteUserSessions,
   findUserByEmail,
   getPasswordHash,
+  getTranscriptName,
   getUser,
   resetPassword,
   savePasswordReset,
   saveSignup,
+  setName,
   setPassword,
   studentNumberVerified,
 } from "../queries/users.ts";
-
-// where the links in emails point (the frontend)
-const appUrl = process.env.APP_URL ?? "http://localhost:5173";
 
 const Email = z
   .string()
@@ -26,9 +26,18 @@ const Email = z
   .toLowerCase()
   .regex(/^[a-z0-9._%+-]+@unb\.ca$/, "use your @unb.ca email");
 
+// as on UNB's records; checked against the transcript when the account is verified
+const Name = z
+  .string()
+  .trim()
+  .min(2, "enter your full name")
+  .max(100)
+  .transform((s) => s.replace(/\s+/g, " "));
+
 const Password = z.string().min(8, "use at least 8 characters").max(128);
 
 const SignupBody = z.object({
+  name: Name,
   email: Email,
   studentNumber: z.string().trim().regex(/^\d{7}$/, "student numbers are 7 digits"),
   password: Password,
@@ -44,6 +53,8 @@ const ConfirmBody = z.object({ token: z.string().min(1) });
 const ForgotBody = z.object({ email: z.string().trim().toLowerCase() });
 
 const ResetBody = z.object({ token: z.string().min(1), password: Password });
+
+const NameBody = z.object({ name: Name });
 
 const ChangePasswordBody = z.object({ currentPassword: z.string(), newPassword: Password });
 
@@ -76,7 +87,7 @@ export const authRouter = Router();
 // Always answers the same way, so the form can't be used to find out who has an account.
 // The email says what happened.
 authRouter.post("/signup", async (req, res) => {
-  const { email, studentNumber, password } = SignupBody.parse(req.body);
+  const { name, email, studentNumber, password } = SignupBody.parse(req.body);
 
   if (await findUserByEmail(email)) {
     await sendEmail(email, "You already have a GradTrellis account", `Log in at ${appUrl}/login with this email.`);
@@ -88,7 +99,7 @@ authRouter.post("/signup", async (req, res) => {
     );
   } else {
     const { token, hash } = newToken();
-    await saveSignup(hash, email, studentNumber, await hashPassword(password));
+    await saveSignup(hash, email, name, studentNumber, await hashPassword(password));
     await sendEmail(
       email,
       "Confirm your GradTrellis account",
@@ -171,6 +182,20 @@ authRouter.put("/password", requireUser, async (req, res) => {
   await deleteUserSessions(userId);
   await startSession(req, res, userId);
   res.status(204).end();
+});
+
+// Once verified, the name has to match the transcript; changing it to one that does lifts
+// a pending deadline or suspension.
+authRouter.patch("/me", requireUser, async (req, res) => {
+  const userId = res.locals.userId as string;
+  const { name } = NameBody.parse(req.body);
+  const printed = await getTranscriptName(userId);
+  if (printed && !nameMatches(name, printed)) {
+    res.status(400).json({ error: { message: `That doesn't match the name on your transcript, ${fullName(printed)}.` } });
+    return;
+  }
+  await setName(userId, name);
+  res.json({ user: await getUser(userId) });
 });
 
 authRouter.post("/logout", async (req, res) => {

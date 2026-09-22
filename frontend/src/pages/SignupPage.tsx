@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function SignupPage() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [studentNumber, setStudentNumber] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +20,7 @@ export function SignupPage() {
     setBusy(true);
     setError(null);
     try {
-      await api.signup({ email, studentNumber, password });
+      await api.signup({ name, email, studentNumber, password });
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "couldn't sign you up");
@@ -62,6 +63,15 @@ export function SignupPage() {
         </CardHeader>
         <form onSubmit={submit}>
           <CardContent className="grid gap-4">
+            <TextField
+              id="name"
+              label="Full name"
+              autoComplete="name"
+              hint="As it appears on your UNB records."
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
             <TextField id="email" label="UNB email" type="email" autoComplete="email" placeholder="you@unb.ca" required value={email} onChange={(e) => setEmail(e.target.value)} />
             <TextField
               id="student-number"

@@ -2,6 +2,7 @@ import express, { Router, type Response } from "express";
 import { z } from "zod";
 import { requireUser } from "../auth.ts";
 import { courseIndex, gradingScale, programs } from "../catalog.ts";
+import { appUrl, sendEmail } from "../email.ts";
 import { Attempt, normalizeCourseCode, Result, runAudit, StudentRecord, Term, termOn } from "../engine/index.ts";
 import {
   addAttempt,
@@ -14,6 +15,7 @@ import {
   updateAttemptResult,
   updateDesignations,
 } from "../queries/students.ts";
+import { emailMatches, fullName, nameMatches } from "../names.ts";
 import { getUser, verifyUser } from "../queries/users.ts";
 import { readTranscript } from "../transcript/read.ts";
 
@@ -72,6 +74,16 @@ async function ownStudentId(res: Response): Promise<string | null> {
 export const studentRouter = Router();
 studentRouter.use(requireUser);
 
+// A suspended account can still log in and fix its name in the profile, but nothing else.
+studentRouter.use(async (_req, res, next) => {
+  const user = await getUser(res.locals.userId as string);
+  if (user?.suspended) {
+    res.status(403).json({ error: { message: "Your account is suspended until your name matches your transcript. Fix it in your profile." } });
+    return;
+  }
+  next();
+});
+
 studentRouter.post("/", async (req, res) => {
   const body = CreateBody.parse(req.body);
   const student = await createStudent(res.locals.userId as string, body.program, body.designations);
@@ -117,7 +129,8 @@ studentRouter.put("/attempts", async (req, res) => {
 });
 
 // The raw PDF of the latest imported transcript; replaces any earlier one. Its student number
-// has to match the account's, and that match is what verifies the account.
+// has to match the account's and its name the UNB email's, and that is what verifies the
+// account. Verifying removes other unverified accounts that typed the same number.
 studentRouter.put("/transcript", express.raw({ type: "application/pdf", limit: "5mb" }), async (req, res) => {
   const file: unknown = req.body;
   if (!Buffer.isBuffer(file) || file.subarray(0, 5).toString("latin1") !== "%PDF-") {
@@ -138,12 +151,34 @@ studentRouter.put("/transcript", express.raw({ type: "application/pdf", limit: "
     res.status(400).json({ error: { message: "This transcript belongs to a different student number than your account." } });
     return;
   }
-  if (!(await verifyUser(userId, transcript.student.name))) {
+  const printed = transcript.student.name;
+  if (!emailMatches(user.email, printed)) {
+    res.status(400).json({ error: { message: `The name on this transcript, ${fullName(printed)}, doesn't match your UNB email.` } });
+    return;
+  }
+  const removed = await verifyUser(userId, printed, nameMatches(user.name, printed));
+  if (!removed) {
     res.status(409).json({ error: { message: "Another account already verified this student number. Contact us and we'll sort it out." } });
     return;
   }
   await saveTranscript(id, file);
-  res.json({ user: await getUser(userId) });
+
+  for (const email of removed) {
+    await sendEmail(
+      email,
+      "Your GradTrellis account was removed",
+      `Another account verified student number ${user.studentNumber} with its UNB transcript, so your unverified account with the same number was removed.\n\nIf you typed the wrong number, sign up again at ${appUrl}/signup. If that number is yours, reply to this email and we'll sort it out.`,
+    );
+  }
+  const verified = (await getUser(userId))!;
+  if (verified.nameDeadline && !user.nameDeadline) {
+    await sendEmail(
+      user.email,
+      "Your name doesn't match your transcript",
+      `You signed up to GradTrellis as ${user.name}, but your transcript says ${verified.transcriptName}. Change your name at ${appUrl}/profile by ${verified.nameDeadline.toDateString()}, or your account will be suspended.`,
+    );
+  }
+  res.json({ user: verified });
 });
 
 studentRouter.patch("/attempts/:attemptId", async (req, res) => {

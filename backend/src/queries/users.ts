@@ -1,12 +1,20 @@
 import { pool } from "../db.ts";
+import { fullName } from "../names.ts";
 
 export interface User {
   id: string;
   email: string;
   studentNumber: string;
+  // as typed at signup, or changed later
+  name: string;
   // set once a transcript with the same student number is uploaded
   verified: boolean;
-  name: string | null;
+  // the name on that transcript, first names first
+  transcriptName: string | null;
+  // when the name doesn't match the transcript: the date it has to be fixed by
+  nameDeadline: Date | null;
+  // the deadline passed without a fix
+  suspended: boolean;
 }
 
 interface UserRow {
@@ -14,12 +22,23 @@ interface UserRow {
   email: string;
   student_number: string;
   password_hash: string;
-  name: string | null;
+  name: string;
+  transcript_name: string | null;
   verified_at: Date | null;
+  name_deadline: Date | null;
 }
 
 function toUser(u: UserRow): User {
-  return { id: u.id, email: u.email, studentNumber: u.student_number, verified: u.verified_at !== null, name: u.name };
+  return {
+    id: u.id,
+    email: u.email,
+    studentNumber: u.student_number,
+    name: u.name,
+    verified: u.verified_at !== null,
+    transcriptName: u.transcript_name && fullName(u.transcript_name),
+    nameDeadline: u.name_deadline,
+    suspended: u.name_deadline !== null && u.name_deadline < new Date(),
+  };
 }
 
 export async function findUserByEmail(email: string): Promise<(User & { passwordHash: string }) | null> {
@@ -39,26 +58,53 @@ export async function studentNumberVerified(studentNumber: string): Promise<bool
   return (rowCount ?? 0) > 0;
 }
 
-// After a transcript with the user's student number was uploaded. False if another
-// account already verified that number.
-export async function verifyUser(id: string, name: string): Promise<boolean> {
+// as printed on the verified transcript ("Lastname, Firstnames")
+export async function getTranscriptName(id: string): Promise<string | null> {
+  const { rows } = await pool.query<{ transcript_name: string | null }>("SELECT transcript_name FROM users WHERE id = $1", [id]);
+  return rows[0]?.transcript_name ?? null;
+}
+
+// After a transcript with the user's student number was uploaded. A name that doesn't match
+// the transcript gets 7 days to be fixed. Other accounts that only typed the same number are
+// deleted, and their emails returned so they can be told. Null if another account already
+// verified that number.
+export async function verifyUser(id: string, transcriptName: string, nameMatches: boolean): Promise<string[] | null> {
+  const client = await pool.connect();
   try {
-    await pool.query("UPDATE users SET verified_at = coalesce(verified_at, now()), name = $2 WHERE id = $1", [id, name]);
-    return true;
+    await client.query("BEGIN");
+    const { rows } = await client.query<{ student_number: string }>(
+      `UPDATE users SET verified_at = coalesce(verified_at, now()), transcript_name = $2,
+         name_deadline = CASE WHEN $3::boolean THEN NULL ELSE coalesce(name_deadline, now() + interval '7 days') END
+       WHERE id = $1 RETURNING student_number`,
+      [id, transcriptName, nameMatches],
+    );
+    const removed = await client.query<{ email: string }>("DELETE FROM users WHERE student_number = $1 AND verified_at IS NULL RETURNING email", [
+      rows[0]!.student_number,
+    ]);
+    await client.query("COMMIT");
+    return removed.rows.map((r) => r.email);
   } catch (err) {
-    if ((err as { code?: string }).code === "23505") return false;
+    await client.query("ROLLBACK");
+    if ((err as { code?: string }).code === "23505") return null;
     throw err;
+  } finally {
+    client.release();
   }
 }
 
+// A verified user's new name has already been checked against the transcript, which ends any deadline.
+export async function setName(id: string, name: string) {
+  await pool.query("UPDATE users SET name = $2, name_deadline = NULL WHERE id = $1", [id, name]);
+}
+
 // A new signup for the same email replaces the old one, so only the latest link works.
-export async function saveSignup(tokenHash: string, email: string, studentNumber: string, passwordHash: string) {
+export async function saveSignup(tokenHash: string, email: string, name: string, studentNumber: string, passwordHash: string) {
   await pool.query(
-    `INSERT INTO signups (token_hash, email, student_number, password_hash, expires_at)
-     VALUES ($1, $2, $3, $4, now() + interval '24 hours')
-     ON CONFLICT (email) DO UPDATE SET token_hash = excluded.token_hash, student_number = excluded.student_number,
+    `INSERT INTO signups (token_hash, email, name, student_number, password_hash, expires_at)
+     VALUES ($1, $2, $3, $4, $5, now() + interval '24 hours')
+     ON CONFLICT (email) DO UPDATE SET token_hash = excluded.token_hash, name = excluded.name, student_number = excluded.student_number,
        password_hash = excluded.password_hash, expires_at = excluded.expires_at`,
-    [tokenHash, email, studentNumber, passwordHash],
+    [tokenHash, email, name, studentNumber, passwordHash],
   );
 }
 
@@ -68,16 +114,16 @@ export async function confirmSignup(tokenHash: string): Promise<string | null> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const { rows } = await client.query<{ email: string; student_number: string; password_hash: string }>(
-      "DELETE FROM signups WHERE token_hash = $1 AND expires_at > now() RETURNING email, student_number, password_hash",
+    const { rows } = await client.query<{ email: string; name: string; student_number: string; password_hash: string }>(
+      "DELETE FROM signups WHERE token_hash = $1 AND expires_at > now() RETURNING email, name, student_number, password_hash",
       [tokenHash],
     );
     const signup = rows[0];
     const created = signup
       ? await client.query<{ id: string }>(
-          `INSERT INTO users (email, student_number, password_hash) VALUES ($1, $2, $3)
+          `INSERT INTO users (email, name, student_number, password_hash) VALUES ($1, $2, $3, $4)
            ON CONFLICT DO NOTHING RETURNING id`,
-          [signup.email, signup.student_number, signup.password_hash],
+          [signup.email, signup.name, signup.student_number, signup.password_hash],
         )
       : null;
     await client.query("COMMIT");

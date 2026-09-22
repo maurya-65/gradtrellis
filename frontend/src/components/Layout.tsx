@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet } from "react-router";
+import type { User } from "../api/client.ts";
 import { useSession } from "../hooks/useSession.tsx";
 import { Wordmark } from "./Logo.tsx";
 import { ProfileMenu } from "./ProfileMenu.tsx";
@@ -10,6 +11,24 @@ function NavButton({ to, children }: { to: string; children: string }) {
     <NavLink to={to} className={({ isActive }) => cn(buttonVariants({ variant: isActive ? "secondary" : "ghost" }), "h-9 px-3")}>
       {children}
     </NavLink>
+  );
+}
+
+// on every page until the account's name matches the transcript
+function NameBanner({ user }: { user: User }) {
+  if (!user.nameDeadline) return null;
+  const deadline = new Date(user.nameDeadline).toLocaleDateString(undefined, { month: "long", day: "numeric" });
+  return (
+    <div role="alert" className="border-b bg-brand-soft">
+      <p className="mx-auto max-w-5xl px-4 py-3 text-sm">
+        {user.suspended
+          ? `Your account is suspended because your name doesn't match your transcript (${user.transcriptName}).`
+          : `The name on your account doesn't match your transcript (${user.transcriptName}). Change it by ${deadline} or your account will be suspended.`}{" "}
+        <Link to="/profile" className="font-medium text-primary underline-offset-4 hover:underline">
+          Fix it in your profile
+        </Link>
+      </p>
+    </div>
   );
 }
 
@@ -45,6 +64,7 @@ export function Layout() {
           )}
         </div>
       </header>
+      {user && <NameBanner user={user} />}
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
         <Outlet />

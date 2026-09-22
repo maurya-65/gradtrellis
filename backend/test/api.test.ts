@@ -13,6 +13,7 @@ const databaseUrl = process.env.TEST_DATABASE_URL;
 // No mail provider in tests: collect what would have been sent.
 const sent = vi.hoisted(() => [] as Array<{ to: string; subject: string; text: string }>);
 vi.mock("../src/email.ts", () => ({
+  appUrl: "http://localhost:5173",
   sendEmail: async (to: string, subject: string, text: string) => {
     sent.push({ to, subject, text });
   },
@@ -58,7 +59,8 @@ describe.skipIf(!databaseUrl)("API", () => {
   let counter = 0;
   function newIdentity() {
     counter++;
-    return { email: `student${counter}@unb.ca`, studentNumber: String(3000000 + counter), password: "correct horse battery" };
+    // an email without a dot can't be read for a name, so any transcript name passes it
+    return { name: "Test Student", email: `student${counter}@unb.ca`, studentNumber: String(3000000 + counter), password: "correct horse battery" };
   }
 
   function linkTokenFor(email: string): string | undefined {
@@ -102,7 +104,7 @@ describe.skipIf(!databaseUrl)("API", () => {
 
       const confirmed = await call("POST", "/auth/confirm", { token: linkTokenFor(identity.email) });
       expect(confirmed.status).toBe(201);
-      expect(confirmed.body.user).toMatchObject({ email: identity.email, studentNumber: identity.studentNumber });
+      expect(confirmed.body.user).toMatchObject({ email: identity.email, name: "Test Student", studentNumber: identity.studentNumber, verified: false });
 
       const me = await call("GET", "/auth/me", undefined, confirmed.cookie);
       expect(me.body).toMatchObject({ user: { email: identity.email }, student: null });
@@ -116,10 +118,10 @@ describe.skipIf(!databaseUrl)("API", () => {
       expect((await call("POST", "/auth/confirm", { token })).status).toBe(400);
     });
 
-    it("only accepts UNB emails, 7-digit student numbers and 8+ character passwords", async () => {
-      const res = await call("POST", "/auth/signup", { email: "me@gmail.com", studentNumber: "12345", password: "short" });
+    it("needs a name, a UNB email, a 7-digit student number and an 8+ character password", async () => {
+      const res = await call("POST", "/auth/signup", { name: " ", email: "me@gmail.com", studentNumber: "12345", password: "short" });
       expect(res.status).toBe(400);
-      expect(res.body.error.details.map((d: { path: string }) => d.path).sort()).toEqual(["email", "password", "studentNumber"]);
+      expect(res.body.error.details.map((d: { path: string }) => d.path).sort()).toEqual(["email", "name", "password", "studentNumber"]);
     });
 
     it("doesn't reveal an existing email, and never creates a second account for it", async () => {
@@ -211,9 +213,9 @@ describe.skipIf(!databaseUrl)("API", () => {
   describe("student number verification", () => {
     it("verifies the account from a transcript with the same student number", async () => {
       const { cookie, identity } = await newStudent();
-      const res = await upload(cookie, sampleTranscript(identity.studentNumber, "Student, Verified"));
+      const res = await upload(cookie, sampleTranscript(identity.studentNumber));
       expect(res.status).toBe(200);
-      expect(res.body.user).toMatchObject({ verified: true, name: "Student, Verified" });
+      expect(res.body.user).toMatchObject({ verified: true, name: "Test Student", transcriptName: "Test Student", nameDeadline: null, suspended: false });
       expect((await call("GET", "/auth/me", undefined, cookie)).body.user.verified).toBe(true);
     });
 
@@ -234,7 +236,7 @@ describe.skipIf(!databaseUrl)("API", () => {
       expect(res.body.error.message).toContain("Couldn't find a student number");
     });
 
-    it("doesn't let someone typing your number lock you out; only one account can verify it", async () => {
+    it("doesn't let someone typing your number lock you out, and removes them when you verify", async () => {
       const yours = newIdentity();
       const squatter = { ...newIdentity(), studentNumber: yours.studentNumber };
       const { cookie: theirCookie } = await newStudent([], squatter);
@@ -243,15 +245,73 @@ describe.skipIf(!databaseUrl)("API", () => {
       const { cookie } = await newStudent([], yours);
       expect((await upload(cookie, sampleTranscript(yours.studentNumber))).status).toBe(200);
 
-      // without your transcript they can't verify; with a copy of it, the number is already taken
-      const res = await upload(theirCookie, sampleTranscript(yours.studentNumber));
-      expect(res.status).toBe(409);
+      // verifying deletes the other unverified account with that number, and tells them
+      expect((await call("GET", "/auth/me", undefined, theirCookie)).status).toBe(401);
+      expect(sent.find((m) => m.to === squatter.email && m.subject === "Your GradTrellis account was removed")).toBeDefined();
+      const { rows } = await db.query("SELECT email FROM users WHERE student_number = $1", [yours.studentNumber]);
+      expect(rows).toEqual([{ email: yours.email }]);
 
       // and new signups with a verified number are turned away by email
       const late = newIdentity();
       await call("POST", "/auth/signup", { ...late, studentNumber: yours.studentNumber });
       expect(sent.at(-1)).toMatchObject({ to: late.email, subject: "That student number is already registered" });
       expect(linkTokenFor(late.email)).toBeUndefined();
+    });
+  });
+
+  describe("names", () => {
+    it("refuses a transcript whose name doesn't match the UNB email", async () => {
+      const identity = { ...newIdentity(), name: "Anne Tremblay", email: `anne.tremblay${counter}@unb.ca` };
+      const { cookie } = await newStudent([], identity);
+
+      const res = await upload(cookie, sampleTranscript(identity.studentNumber, "Smith, John"));
+      expect(res.status).toBe(400);
+      expect(res.body.error.message).toContain("John Smith, doesn't match your UNB email");
+      expect((await call("GET", "/auth/me", undefined, cookie)).body.user.verified).toBe(false);
+
+      expect((await upload(cookie, sampleTranscript(identity.studentNumber, "Tremblay, Anne Marie"))).status).toBe(200);
+    });
+
+    it("gives a signup name that doesn't match the transcript a deadline, lifted by fixing it", async () => {
+      const identity = { ...newIdentity(), name: "Someone Else" };
+      const { cookie } = await newStudent([], identity);
+
+      const res = await upload(cookie, sampleTranscript(identity.studentNumber));
+      expect(res.status).toBe(200);
+      expect(res.body.user).toMatchObject({ verified: true, name: "Someone Else", transcriptName: "Test Student", suspended: false });
+      const days = (new Date(res.body.user.nameDeadline).getTime() - Date.now()) / 86_400_000;
+      expect(days).toBeGreaterThan(6.9);
+      expect(sent.at(-1)).toMatchObject({ to: identity.email, subject: "Your name doesn't match your transcript" });
+
+      const wrong = await call("PATCH", "/auth/me", { name: "Another Name" }, cookie);
+      expect(wrong.status).toBe(400);
+      expect(wrong.body.error.message).toContain("Test Student");
+
+      const fixed = await call("PATCH", "/auth/me", { name: "  test   student " }, cookie);
+      expect(fixed.status).toBe(200);
+      expect(fixed.body.user).toMatchObject({ name: "test student", nameDeadline: null });
+    });
+
+    it("suspends the account once the deadline passes, until the name is fixed", async () => {
+      const identity = { ...newIdentity(), name: "Someone Else" };
+      const { cookie } = await newStudent([], identity);
+      await upload(cookie, sampleTranscript(identity.studentNumber));
+      await db.query("UPDATE users SET name_deadline = now() - interval '1 minute' WHERE email = $1", [identity.email]);
+
+      expect((await call("GET", "/auth/me", undefined, cookie)).body.user.suspended).toBe(true);
+      const blocked = await call("GET", "/student/audit", undefined, cookie);
+      expect(blocked.status).toBe(403);
+      expect(blocked.body.error.message).toContain("suspended");
+
+      expect((await call("PATCH", "/auth/me", { name: "Test Student" }, cookie)).status).toBe(200);
+      expect((await call("GET", "/student/audit", undefined, cookie)).status).toBe(200);
+    });
+
+    it("lets an unverified account change its name freely", async () => {
+      const cookie = await newUser();
+      const res = await call("PATCH", "/auth/me", { name: "New Name" }, cookie);
+      expect(res.status).toBe(200);
+      expect(res.body.user.name).toBe("New Name");
     });
   });
 

@@ -11,9 +11,14 @@ export interface User {
   id: string;
   email: string;
   studentNumber: string;
+  name: string;
   // true once a transcript with the same student number was uploaded
   verified: boolean;
-  name: string | null;
+  // the name on that transcript
+  transcriptName: string | null;
+  // set when the name doesn't match the transcript; past it the account is suspended
+  nameDeadline: string | null;
+  suspended: boolean;
 }
 
 export interface CourseSummary {
@@ -49,7 +54,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 }
 
 export const api = {
-  signup: (input: { email: string; studentNumber: string; password: string }) => request<{ message: string }>("POST", "/auth/signup", input),
+  signup: (input: { name: string; email: string; studentNumber: string; password: string }) => request<{ message: string }>("POST", "/auth/signup", input),
 
   confirm: (token: string) => request<{ user: User }>("POST", "/auth/confirm", { token }).then((r) => r.user),
 
@@ -65,6 +70,8 @@ export const api = {
   changePassword: (currentPassword: string, newPassword: string) => request<void>("PUT", "/auth/password", { currentPassword, newPassword }),
 
   me: () => request<{ user: User; student: Student | null }>("GET", "/auth/me"),
+
+  updateName: (name: string) => request<{ user: User }>("PATCH", "/auth/me", { name }).then((r) => r.user),
 
   searchCourses: (q: string, limit = 12) =>
     request<{ courses: CourseSummary[] }>("GET", `/courses?q=${encodeURIComponent(q)}&limit=${limit}`).then((r) => r.courses),

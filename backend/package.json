@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "express": "^5.2.1",
+    "fastest-levenshtein": "^1.0.16",
     "pdfjs-dist": "^6.3.289",
     "pg": "^8.23.0",
     "zod": "^4.6.5"

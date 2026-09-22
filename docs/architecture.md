@@ -62,24 +62,29 @@ All routes are under `/api`. Errors look like `{ "error": { "message", "details"
 |---|---|
 | `GET /health` | Liveness and the loaded course calendar year |
 | `GET /courses?q=&limit=` | Course search by code prefix or title words |
-| `POST /auth/signup` | Start a signup (UNB email, student number, password); always answers 202 and the email says what happened |
+| `POST /auth/signup` | Start a signup (full name, UNB email, student number, password); always answers 202 and the email says what happened |
 | `POST /auth/confirm` | Create the account from the emailed token and log in |
 | `POST /auth/login`, `POST /auth/logout` | Start or end a session |
 | `GET /auth/me` | The logged-in user and their profile (or null) |
+| `PATCH /auth/me` | Change the account's name; once verified it has to match the transcript |
+| `POST /auth/forgot-password`, `POST /auth/reset-password` | Email a reset link; set a new password from it (logs out every session) |
+| `PUT /auth/password` | Change the password with the current one (logs out other sessions) |
 | `POST /student` | Create the user's profile (entry term, designations) |
 | `GET /student`, `PATCH /student` | Read the profile or change its designations |
 | `POST /student/attempts` | Add a transcript line |
 | `PUT /student/attempts` | Replace every transcript line in one transaction (transcript import) |
-| `PUT /student/transcript` | Store the latest transcript PDF (raw `application/pdf` body, 5 MB max) and verify the student number |
+| `PUT /student/transcript` | Store the latest transcript PDF (raw `application/pdf` body, 5 MB max) and verify the account |
 | `PATCH /student/attempts/:attemptId` | Change a transcript line's result (e.g. in progress to a grade) |
 | `DELETE /student/attempts/:attemptId` | Remove a transcript line |
 | `GET /student/audit` | Degree audit |
 
 ## Accounts
 
-A signup (`@unb.ca` email, 7-digit student number, password) waits in `signups` until the student opens the emailed link and presses Confirm; only then is the user created. Confirming on a button press, not on opening the link, keeps UNB's Microsoft 365 link scanner from using up the token. Emails are unique, and the signup response never says whether one is taken.
+A signup (full name, `@unb.ca` email, 7-digit student number, password) waits in `signups` until the student opens the emailed link and presses Confirm; only then is the user created. Confirming on a button press, not on opening the link, keeps UNB's Microsoft 365 link scanner from using up the token. Emails are unique, and the signup response never says whether one is taken.
 
-The student number typed at signup proves nothing on its own, so it doesn't block anyone. It is verified when the student uploads their transcript: the server reads the PDF itself (`src/transcript/read.ts`) and the number printed on it must match the account's. That sets `verified_at` and stores the name from the transcript. Only one account can verify a given number, so someone typing another student's number can't lock them out. An edited PDF could still get through; "Sign in with UNB" through UNB's Microsoft 365 is the airtight version, and a student ID card scan is an idea for later.
+The student number typed at signup proves nothing on its own, so it doesn't block anyone. It is verified when the student uploads their transcript: the server reads the PDF itself (`src/transcript/read.ts`) and the number printed on it must match the account's. The name printed on it must also match the UNB email, which for students is `givennames.surname@unb.ca` (emails in other shapes can't be judged and pass). That sets `verified_at` and stores the transcript's name. Only one account can verify a given number, so someone typing another student's number can't lock them out, and verifying deletes any other unverified accounts that typed the same number (they get an email saying so).
+
+The name typed at signup is checked against the transcript's when the account is verified (`src/names.ts`: accents, punctuation and word order don't matter, and a small typo is forgiven via edit distance). If it doesn't match, the student has 7 days (`name_deadline`) to change it in their profile; after that the account is suspended: it can still log in and fix the name, but `/student` answers 403. Once verified, a name can only be changed to one that matches the transcript. An edited PDF could still get through; "Sign in with UNB" through UNB's Microsoft 365 is the airtight version, and a student ID card scan is an idea for later.
 
 Passwords are hashed with scrypt. A login creates a random session token in an `httpOnly`, `SameSite=Lax` cookie that lasts 30 days; the `sessions` table stores only its SHA-256 hash, so logging out deletes it for good. Everything under `/student` belongs to the logged-in user, so there are no ids to guess. Ten wrong passwords lock an email out for 15 minutes (in memory, one server).
 
@@ -87,13 +92,13 @@ There is no mail provider yet: `src/email.ts` prints emails to the console.
 
 ## Database
 
-PostgreSQL through `pg` with hand-written SQL. Tables: `users`, `signups` and `sessions` for accounts; `students` (one per user), `attempts` and `transcripts` (the latest uploaded PDF). CHECK constraints back up the request validation. Calendar data is not stored in the database.
+PostgreSQL through `pg` with hand-written SQL. Tables: `users`, `signups`, `sessions` and `password_resets` for accounts; `students` (one per user), `attempts` and `transcripts` (the latest uploaded PDF). CHECK constraints back up the request validation. Calendar data is not stored in the database.
 
 ## Frontend
 
 Signup, confirm and login pages, then setup (entry term, Honours, Cybersecurity), transcript (course search, add and remove attempts, grouped by term) and audit. The session lives in the cookie, so `useSession` asks `/auth/me` who is logged in on every load.
 
-The transcript page can import the unofficial transcript PDF from myUNB. pdf.js reads it in the browser (`src/transcript/pdf.ts`), and the parser shared with the server (`backend/src/transcript/parse.ts`) picks out the student number, term headings and course lines, and the student reviews the result before it replaces their attempts. Saving also stores the PDF in `transcripts`, one per student, replacing any earlier upload. It holds personal data (name, student number, birth date), so no endpoint serves it back. The Profile menu in the header shows the account, changes the Honours and Cybersecurity choices and logs out.
+The transcript page can import the unofficial transcript PDF from myUNB. pdf.js reads it in the browser (`src/transcript/pdf.ts`), and the parser shared with the server (`backend/src/transcript/parse.ts`) picks out the student number, term headings and course lines, and the student reviews the result before it replaces their attempts. Saving also stores the PDF in `transcripts`, one per student, replacing any earlier upload. It holds personal data (name, student number, birth date), so no endpoint serves it back. The profile icon in the header opens a menu with the profile page and logging out. The profile page shows whether the account is verified and changes the name, the Honours and Cybersecurity choices, the password and the appearance (light, dark or system, kept per device in `localStorage`). A banner on every page warns about a name that doesn't match the transcript.
 
 ## Tests
 

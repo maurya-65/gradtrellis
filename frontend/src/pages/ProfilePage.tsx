@@ -1,13 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
-import { BadgeCheck, CircleUserRound, LogOut, Monitor, Moon, Sun } from "lucide-react";
+import { BadgeCheck, CircleAlert, CircleUserRound, LogOut, Monitor, Moon, Sun } from "lucide-react";
 import { termLabel } from "backend/engine/terms";
-import { api } from "../api/client.ts";
+import { api, type User } from "../api/client.ts";
 import { DesignationFields } from "../components/DesignationFields.tsx";
-import { displayName } from "../components/ProfileMenu.tsx";
 import { TextField } from "../components/TextField.tsx";
 import { useSession } from "../hooks/useSession.tsx";
 import { getTheme, setTheme, type Theme } from "../lib/theme.ts";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -27,20 +27,36 @@ export function ProfilePage() {
       <div className="flex items-center gap-4">
         <CircleUserRound className="size-16 shrink-0 text-muted-foreground" strokeWidth={1.25} aria-hidden />
         <div className="grid min-w-0 gap-0.5">
-          <h1 className="truncate text-2xl font-semibold tracking-tight">{displayName(user) ?? "Your profile"}</h1>
-          <p className="truncate text-sm text-muted-foreground">{user.email}</p>
-          <p className="flex items-center gap-1 text-sm text-muted-foreground">
-            Student number {user.studentNumber}
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="truncate text-2xl font-semibold tracking-tight">{user.name}</h1>
             {user.verified ? (
-              <BadgeCheck className="size-4 text-complete" aria-label="verified" />
+              <Badge variant="outline" className="text-complete">
+                <BadgeCheck />
+                Verified
+              </Badge>
             ) : (
-              <span>· import your transcript to verify it</span>
+              <Badge variant="outline" className="text-muted-foreground">
+                <CircleAlert />
+                Unverified
+              </Badge>
             )}
-          </p>
+          </div>
+          <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+          <p className="text-sm text-muted-foreground">Student number {user.studentNumber}</p>
+          {!user.verified && (
+            <p className="text-sm text-muted-foreground">
+              Import your transcript on the{" "}
+              <Link to="/transcript" className="font-medium text-primary hover:underline">
+                Transcript
+              </Link>{" "}
+              page to verify your account.
+            </p>
+          )}
         </div>
       </div>
 
-      <DegreeCard />
+      <NameCard user={user} />
+      {!user.suspended && <DegreeCard />}
       <PasswordCard />
       <AppearanceCard />
 
@@ -49,6 +65,65 @@ export function ProfilePage() {
         Log out
       </Button>
     </div>
+  );
+}
+
+function NameCard({ user }: { user: User }) {
+  const { setUser } = useSession();
+  const [name, setName] = useState(user.name);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async (value: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await api.updateName(value);
+      setName(updated.name);
+      await setUser(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "couldn't save your name");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    void save(name);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Name</CardTitle>
+        <CardDescription>
+          {user.transcriptName
+            ? `It has to match your transcript: ${user.transcriptName}.`
+            : "As on your UNB records. It's checked against your transcript when you verify your account."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={submit} className="grid gap-4">
+          <TextField id="name" label="Full name" autoComplete="name" required value={name} onChange={(e) => setName(e.target.value)} />
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={busy || name.trim() === user.name} className="h-10">
+              {busy ? "Saving..." : "Save name"}
+            </Button>
+            {user.nameDeadline && user.transcriptName && (
+              <Button type="button" variant="outline" disabled={busy} onClick={() => void save(user.transcriptName!)} className="h-10">
+                Use {user.transcriptName}
+              </Button>
+            )}
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 

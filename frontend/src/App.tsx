@@ -13,10 +13,12 @@ import { SetupPage } from "./pages/SetupPage.tsx";
 import { SignupPage } from "./pages/SignupPage.tsx";
 import { TranscriptPage } from "./pages/TranscriptPage.tsx";
 
+// a suspended account can only fix its name in the profile
 function RequireStudent({ children }: { children: ReactNode }) {
-  const { student, loading, error } = useSession();
+  const { user, student, loading, error } = useSession();
   if (loading) return <p className="text-muted-foreground">Loading...</p>;
   if (error) return <p role="alert" className="text-destructive">{error}</p>;
+  if (user?.suspended) return <Navigate to="/profile" replace />;
   return student ? children : <Navigate to="/" replace />;
 }
 
@@ -45,6 +47,7 @@ function Home() {
   const { user, student, loading } = useSession();
   if (loading) return null;
   if (!user) return <LandingPage />;
+  if (user.suspended) return <Navigate to="/profile" replace />;
   if (!student) return <Navigate to="/setup" replace />;
   // New profiles start by entering courses; returning students see their audit.
   return <Navigate to={student.attempts.length === 0 ? "/transcript" : "/audit"} replace />;

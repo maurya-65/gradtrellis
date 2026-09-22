@@ -12,13 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// The transcript prints "Lastname, Firstname Middle"; unverified accounts have no name yet.
-export function displayName(user: User): string | null {
-  if (!user.name) return null;
-  const [last, first] = user.name.split(",").map((s) => s.trim());
-  return first ? `${first} ${last}` : user.name;
-}
-
 export function ProfileMenu({ user }: { user: User }) {
   const { logout } = useSession();
   const navigate = useNavigate();
@@ -37,8 +30,8 @@ export function ProfileMenu({ user }: { user: User }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuLabel className="grid gap-0.5 font-normal">
-          <span className="truncate font-medium">{displayName(user) ?? user.email}</span>
-          {user.name && <span className="truncate text-xs text-muted-foreground">{user.email}</span>}
+          <span className="truncate font-medium">{user.name}</span>
+          <span className="truncate text-xs text-muted-foreground">{user.email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
