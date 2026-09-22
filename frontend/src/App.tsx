@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import { Layout } from "./components/Layout.tsx";
 import { SessionProvider, useSession } from "./hooks/useSession.tsx";
+import { AdvisorPage } from "./pages/AdvisorPage.tsx";
 import { AuditPage } from "./pages/AuditPage.tsx";
 import { ConfirmPage } from "./pages/ConfirmPage.tsx";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage.tsx";
@@ -67,6 +68,7 @@ const router = createBrowserRouter([
       { path: "/profile", element: <RequireUser><ProfilePage /></RequireUser> },
       { path: "/transcript", element: <RequireStudent><TranscriptPage /></RequireStudent> },
       { path: "/home", element: <RequireStudent><HomePage /></RequireStudent> },
+      { path: "/advisor", element: <RequireStudent><AdvisorPage /></RequireStudent> },
       { path: "/audit", element: <RequireStudent><AuditPage /></RequireStudent> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],

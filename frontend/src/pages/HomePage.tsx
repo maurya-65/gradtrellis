@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
+import { AdvisorOrb } from "../components/AdvisorOrb.tsx";
 import { Emblem } from "../components/Logo.tsx";
 import { useSession } from "../hooks/useSession.tsx";
 import { Button } from "@/components/ui/button";
@@ -44,10 +45,14 @@ export function HomePage() {
 
       <div className="flex flex-wrap justify-center gap-3">
         <Button asChild className="group h-10 px-5">
-          <Link to="/audit">
-            Degree audit
+          <Link to="/advisor">
+            <AdvisorOrb className="size-5 ring-2 ring-white/70 rounded-full transition-transform duration-300 group-hover:scale-115 group-hover:-rotate-6" />
+            Ask your advisor
             <ArrowRight className="transition-transform group-hover:translate-x-1" />
           </Link>
+        </Button>
+        <Button asChild variant="outline" className="h-10 px-5">
+          <Link to="/audit">Degree audit</Link>
         </Button>
         <Button asChild variant="outline" className="h-10 px-5">
           <Link to="/transcript">Transcript</Link>

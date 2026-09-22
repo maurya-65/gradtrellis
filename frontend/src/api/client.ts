@@ -97,4 +97,6 @@ export const api = {
   deleteAttempt: (attemptId: string) => request<void>("DELETE", `/student/attempts/${attemptId}`),
 
   getAudit: () => request<{ audit: AuditResult }>("GET", "/student/audit").then((r) => r.audit),
+
+  askAdvisor: (question: string) => request<{ intent: string; answer: string }>("POST", "/student/advisor", { question }),
 };

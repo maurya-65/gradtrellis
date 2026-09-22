@@ -1,14 +1,16 @@
+import type { ReactNode } from "react";
 import { Link, NavLink, Outlet } from "react-router";
 import type { User } from "../api/client.ts";
 import { useSession } from "../hooks/useSession.tsx";
+import { AdvisorOrb } from "./AdvisorOrb.tsx";
 import { Wordmark } from "./Logo.tsx";
 import { ProfileMenu } from "./ProfileMenu.tsx";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-function NavButton({ to, children }: { to: string; children: string }) {
+function NavButton({ to, children }: { to: string; children: ReactNode }) {
   return (
-    <NavLink to={to} className={({ isActive }) => cn(buttonVariants({ variant: isActive ? "secondary" : "ghost" }), "h-9 px-3")}>
+    <NavLink to={to} className={({ isActive }) => cn(buttonVariants({ variant: isActive ? "secondary" : "ghost" }), "group h-9 px-3")}>
       {children}
     </NavLink>
   );
@@ -46,6 +48,10 @@ export function Layout() {
             <nav aria-label="Main" className="flex items-center gap-1">
               {student && (
                 <>
+                  <NavButton to="/advisor">
+                    <AdvisorOrb className="size-5 transition-transform duration-300 group-hover:scale-115 group-hover:-rotate-6" />
+                    Advisor
+                  </NavButton>
                   <NavButton to="/transcript">Transcript</NavButton>
                   <NavButton to="/audit">Degree audit</NavButton>
                 </>
