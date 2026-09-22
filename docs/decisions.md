@@ -49,3 +49,14 @@ All rights reserved, to keep options open for offering it to UNB later.
 ## 2026-09-22: Rebuild as a plain frontend/backend project
 
 The first version grew packages, service layers and features ahead of the degree audit. The rebuild keeps the data, engine, allocator and golden tests, and drops the rest: two npm workspaces (`frontend`, `backend`), routes that call SQL query functions directly, and no co-op, approvals or eligibility until a milestone needs them. `architecture.md` describes the result.
+
+## 2026-09-22: Advisor plan (M4, to be designed properly then)
+
+Students will want to talk things through: "I'm into web dev or ML, what should I take?", "is ANTH 1001 worth it?", "would geomatics or a TME diploma help me?". The advisor splits that into three jobs:
+
+- **Retrieval finds candidates.** Semantic search over course descriptions (and, later, minor and diploma pages), because students' words rarely match course titles. Vectors go in the existing Postgres with `pgvector`, combined with keyword search for codes and exact terms.
+- **The engine decides what a course does for the student.** Whether and where it counts, restrictions and exclusions, and prerequisites after M2. Minors and diplomas that students ask about get encoded as program data like BCS, not answered from retrieved text.
+- **An LLM runs the conversation.** It calls search and the engine as tools and explains the result. It never states a requirement the engine didn't return, and it says so when we have no data (course difficulty, for example) instead of guessing.
+
+Guardrails are part of the design, not an add-on: the advisor only answers questions about courses, programs and planning, and declines everything else (coding help, homework, general chat). It has per-student rate limits and a daily usage cap. How to enforce the topic limit, which model to use and how to evaluate answers are decided at M4.
+

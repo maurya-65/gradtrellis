@@ -92,4 +92,4 @@ Three pages: setup (entry term, Honours, Cybersecurity), transcript (course sear
 | M1 | Degree audit (this rebuild) |
 | M2 | Prerequisite parsing, eligibility, next-term suggestions |
 | M3 | Path to graduation: co-op, summer terms, what-if scenarios |
-| M4 | Advisor that explains audit results by calling the engine |
+| M4 | Advisor: course discovery by interest and audit explanations, using retrieval and the engine as tools, limited to degree planning (see `decisions.md`) |
