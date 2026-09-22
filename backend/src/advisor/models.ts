@@ -20,7 +20,9 @@ function providers(): Provider[] {
       name: "Gemini",
       url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       key: env.GEMINI_API_KEY,
-      model: env.GEMINI_MODEL ?? "gemini-3.8-flash",
+      // the lite model answers a rerank in about a second; the full flash model thinks first and
+      // took 5-7 s, near the timeout, and is often turned away as "high demand"
+      model: env.GEMINI_MODEL ?? "gemini-3.5-flash-lite",
     },
   ];
 }
