@@ -12,6 +12,7 @@ import type { AuditResult, DesignationResult, RequirementStatus, Totals, UsableC
 import { usableCourses } from "./usable.ts";
 
 export * from "./types.ts";
+export { neededCourses } from "./needed.ts";
 export { usableCourses } from "./usable.ts";
 
 type Designation = Program["designations"][number];

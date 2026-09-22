@@ -6,9 +6,12 @@ import { appUrl, sendEmail } from "../email.ts";
 import {
   Attempt,
   checkRequisite,
+  type CourseCode,
+  neededCourses,
   nextTerm,
   normalizeCourseCode,
   parseRequisite,
+  type RequisiteStatus,
   Result,
   runAudit,
   StudentRecord,
@@ -63,21 +66,25 @@ const AttemptBody = Attempt.extend({
 
 const ResultBody = z.object({ result: Result });
 
-// ?courses=CS 3383,CS 3413&term=Winter 2027 (term defaults to the next one)
+// ?term=Winter 2027; routes default to the next term
+const TermParam = z
+  .string()
+  .regex(/^(Winter|Summer|Fall) \d{4}$/, "expected a term like 'Winter 2027'")
+  .transform((s) => {
+    const [season, year] = s.split(" ");
+    return Term.parse({ season, year: Number(year) });
+  });
+
+// ?courses=CS 3383,CS 3413
 const EligibilityQuery = z.object({
   courses: z
     .string()
     .transform((s) => s.split(","))
     .pipe(z.array(CourseCodeInput).min(1).max(50)),
-  term: z
-    .string()
-    .regex(/^(Winter|Summer|Fall) \d{4}$/, "expected a term like 'Winter 2027'")
-    .transform((s) => {
-      const [season, year] = s.split(" ");
-      return Term.parse({ season, year: Number(year) });
-    })
-    .optional(),
+  term: TermParam.optional(),
 });
+
+const SuggestionsQuery = z.object({ term: TermParam.optional() });
 
 const ReplaceBody = z.object({
   attempts: z.array(AttemptBody).max(200),
@@ -230,21 +237,24 @@ studentRouter.delete("/attempts/:attemptId", async (req, res) => {
   res.status(204).end();
 });
 
+function audit(record: StudentRecord) {
+  return runAudit(record, { programs, index: courseIndex, scale: gradingScale, asOf: termOn(new Date()) });
+}
+
+// A listed course's prerequisites checked for a term. The calendar's text is parsed; parts
+// it can't read come back as "review" for a person to decide.
+function eligibility(code: CourseCode, attempts: Attempt[], term: Term) {
+  const course = courseIndex.get(code)!;
+  const requisite = course.prereqText ? parseRequisite(course.prereqText) : null;
+  const status: RequisiteStatus = requisite ? checkRequisite(requisite, { attempts, term, index: courseIndex, scale: gradingScale }) : "met";
+  return { code, title: course.title, prereqText: course.prereqText, coreqText: course.coreqText, requisite, status };
+}
+
 studentRouter.get("/audit", async (_req, res) => {
   const id = await ownStudentId(res);
-  if (!id) return;
-  const student = (await getStudent(id))!;
-  const audit = runAudit(StudentRecord.parse(student), {
-    programs,
-    index: courseIndex,
-    scale: gradingScale,
-    asOf: termOn(new Date()),
-  });
-  res.json({ audit });
+  if (id) res.json({ audit: audit(StudentRecord.parse(await getStudent(id))) });
 });
 
-// Can the student take these courses in a term? Checked against the calendar's prerequisite
-// text; parts it can't read come back as "review" for a person to decide.
 studentRouter.get("/eligibility", async (req, res) => {
   const query = EligibilityQuery.parse(req.query);
   const unknown = query.courses.filter((code) => !courseIndex.has(code));
@@ -256,18 +266,22 @@ studentRouter.get("/eligibility", async (req, res) => {
   if (!id) return;
   const { attempts } = StudentRecord.parse(await getStudent(id));
   const term = query.term ?? nextTerm(termOn(new Date()));
+  res.json({ term, courses: query.courses.map((code) => eligibility(code, attempts, term)) });
+});
 
-  const courses = query.courses.map((code) => {
-    const course = courseIndex.get(code)!;
-    const requisite = course.prereqText ? parseRequisite(course.prereqText) : null;
-    return {
-      code,
-      title: course.title,
-      prereqText: course.prereqText,
-      coreqText: course.coreqText,
-      requisite,
-      status: requisite ? checkRequisite(requisite, { attempts, term, index: courseIndex, scale: gradingScale }) : "met",
-    };
-  });
+// Required courses still missing from the audit that the student could take in the term:
+// prerequisites met first, then pending on current courses, then ones needing review.
+studentRouter.get("/suggestions", async (req, res) => {
+  const query = SuggestionsQuery.parse(req.query);
+  const id = await ownStudentId(res);
+  if (!id) return;
+  const record = StudentRecord.parse(await getStudent(id));
+  const term = query.term ?? nextTerm(termOn(new Date()));
+  const order: RequisiteStatus[] = ["met", "pending", "review"];
+  const courses = neededCourses(audit(record))
+    .filter((code) => courseIndex.has(code))
+    .map((code) => eligibility(code, record.attempts, term))
+    .filter((c) => c.status !== "missing")
+    .sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status) || a.code.localeCompare(b.code));
   res.json({ term, courses });
 });

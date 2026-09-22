@@ -78,6 +78,7 @@ All routes are under `/api`. Errors look like `{ "error": { "message", "details"
 | `DELETE /student/attempts/:attemptId` | Remove a transcript line |
 | `GET /student/audit` | Degree audit |
 | `GET /student/eligibility?courses=&term=` | Whether the student meets each course's prerequisites for a term (default: the next one) |
+| `GET /student/suggestions?term=` | Required courses the audit still counts as missing whose prerequisites are met, pending or need review for the term (electives from pools aren't suggested) |
 
 ## Prerequisites
 

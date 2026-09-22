@@ -460,6 +460,21 @@ describe.skipIf(!databaseUrl)("API", () => {
       expect((await call("GET", "/student/eligibility?courses=CS%201083&term=Spring%202025", undefined, cookie)).status).toBe(400);
     });
 
+    it("suggests required courses the student can take next, met prerequisites first", async () => {
+      const { cookie } = await newStudent();
+      await call("POST", "/student/attempts", cs1073, cookie);
+
+      const res = await call("GET", "/student/suggestions?term=Winter%202025", undefined, cookie);
+      expect(res.status).toBe(200);
+      const byCode = new Map(res.body.courses.map((c: { code: string; status: string }) => [c.code, c.status]));
+      expect(byCode.get("CS 1083")).toBe("met");
+      // taken already, or blocked by CS 1083
+      expect(byCode.has("CS 1073")).toBe(false);
+      expect(byCode.has("CS 2043")).toBe(false);
+      const statuses = res.body.courses.map((c: { status: string }) => c.status);
+      expect(statuses).toEqual([...statuses].sort((a: string, b: string) => ["met", "pending", "review"].indexOf(a) - ["met", "pending", "review"].indexOf(b)));
+    });
+
     it("audits the student", async () => {
       const { cookie } = await newStudent();
       await call("POST", "/student/attempts", cs1073, cookie);
