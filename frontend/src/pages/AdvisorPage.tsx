@@ -13,7 +13,7 @@ interface Message {
   failed?: boolean;
 }
 
-const STARTERS = ["What do I have left?", "What should I take next term?", "Can I take CS 3383 next term?", "What's my CGPA?"];
+const STARTERS = ["What do I have left?", "What should I take next term?", "Can I take CS 3383 next term?", "I really like machine learning, what fits?"];
 
 const THINKING_STEPS = ["Reading your transcript…", "Checking the calendar…", "Working it out…"];
 const STEP_MS = 700;

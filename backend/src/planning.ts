@@ -5,15 +5,56 @@ import {
   checkRequisite,
   neededCourses,
   parseRequisite,
+  programForEntry,
   REQUISITE_STATUSES,
   runAudit,
+  subjectOf,
   termOn,
   worstRequisite,
   type CourseCode,
+  type Requirement,
   type RequisiteStatus,
+  type Selector,
   type StudentRecord,
   type Term,
 } from "./engine/index.ts";
+
+function selectorSubjects(s: Selector): string[] {
+  switch (s.type) {
+    case "codes":
+      return s.codes.map(subjectOf);
+    case "subjects":
+      return s.subjects;
+    case "all":
+    case "any":
+      return s.of.flatMap(selectorSubjects);
+    default:
+      // "not", levels, flags and "any course" don't point at a field
+      return [];
+  }
+}
+
+function requirementSubjects(r: Requirement): string[] {
+  switch (r.type) {
+    case "course":
+      return [subjectOf(r.code)];
+    case "allOf":
+      return r.items.flatMap(requirementSubjects);
+    case "oneOf":
+      return r.options.flatMap(requirementSubjects);
+    case "pool":
+      return selectorSubjects(r.select);
+    case "cgpa":
+      return [];
+  }
+}
+
+// The subjects a student's program requirements name (CS, MATH, STAT, ... for BCS): their field,
+// for ranking course search. Free-elective pools take any course, so they don't narrow it.
+export function programSubjects(record: StudentRecord): Set<string> {
+  const { program } = programForEntry(programs, record.program);
+  return new Set([...program.requirements, ...program.designations.flatMap((d) => d.requirements)].flatMap(requirementSubjects));
+}
 
 export function auditOf(record: StudentRecord) {
   return runAudit(record, { programs, index: courseIndex, scale: gradingScale, asOf: termOn(new Date()) });

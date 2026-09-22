@@ -260,5 +260,5 @@ studentRouter.get("/suggestions", async (req, res) => {
 studentRouter.post("/advisor", async (req, res) => {
   const { question } = AdvisorBody.parse(req.body);
   const id = await ownStudentId(res);
-  if (id) res.json(ask(question, StudentRecord.parse(await getStudent(id))));
+  if (id) res.json(await ask(question, StudentRecord.parse(await getStudent(id))));
 });

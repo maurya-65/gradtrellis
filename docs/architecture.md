@@ -22,8 +22,11 @@ backend/
     queries/          SQL for student data
     catalog.ts        loads data/ at startup, course search
     engine/           schemas and the degree audit (no Express, pg or fs imports)
+    planning.ts       the engine applied to a student: audit, eligibility, next-term suggestions
+    advisor/          reads questions and answers them from the engine and course search
   data/               calendar data: programs, course listings, grading scale
   scripts/scrape/     downloads UNB course listings into data/courses
+  scripts/embed-courses.ts  embeds every course for the advisor's search into data/embeddings
   test/               engine, golden and API tests
 docs/
 ```
@@ -38,11 +41,12 @@ npm workspaces, not pnpm. Node 24 runs the TypeScript directly (type stripping),
 |---|---|---|
 | `data/programs/unb-fredericton/bcs-2024-2025.json` | Requirements, designations (Honours, Cybersecurity), policies, interpretation notes | Hand-encoded from the 2024-2025 calendar |
 | `data/courses/unb-fredericton/<year>.json` | Every Fredericton course listing: credit hours, flags, credit restrictions and exclusions, raw prerequisite text | `npm run scrape` |
+| `data/embeddings/unb-fredericton/<year>.json` | One vector per course for the advisor's search by meaning | `npm run embed` |
 | `data/grading/unb.json` | Letter grade points and which results count for credit, GPA and attempts | Hand-encoded from Section B |
 
 Degree requirements follow the calendar the student **entered** under. Course facts come from the **current** listings. The two are versioned separately (see `calendar-notes.md`).
 
-Prerequisites are stored as raw text only. Parsing them and checking eligibility are M2 work.
+Prerequisite and corequisite text is stored raw and parsed when checked (see Prerequisites below).
 
 ## Degree audit
 
@@ -99,7 +103,14 @@ The design is in `docs/decisions.md` (local first, free models only for wording)
 - `src/advisor/understand.ts` reads a question locally: course codes (only real subjects, so "fall 2026" isn't one), the term asked about ("next term", "next fall", "winter 2028"), and the kind of question from ordered pattern rules: CGPA, can I take X, about a course, what to take next, progress, greeting, or unknown.
 - `src/advisor/answer.ts` answers each kind from the engine through `src/planning.ts` (the audit, prerequisite checks and next-term suggestions, shared with the student routes) with plain templates. Nothing is generated, so nothing can be invented. Unknown questions get a list of what the advisor can answer.
 
-Open-ended questions ("I like ML, what fits?") come next: course search by meaning, then the free-model chain writing from an anonymous fact sheet.
+- `src/advisor/language.ts` tidies the question first: misspelled words are snapped to the closest word in the calendar's vocabulary (or a common question word), and shorthand is spelled out ("ML" to machine learning).
+- Questions about Honours or the Cybersecurity specialization ("what do I need for the cybersecurity specialization?") are answered from the audit, run as if the student were pursuing that designation, so they see exactly what's left even before adding it to their profile. A topic question that mentions cybersecurity points to the specialization.
+- `src/advisor/search.ts` finds undergraduate courses by meaning: the question is embedded locally (`src/advisor/embeddings.ts`, all-MiniLM-L6-v2) and compared with every course's precomputed vector, with a small lift for courses using the same words and for courses in the student's own field (the subjects their program's requirements name, `programSubjects` in `src/planning.ts`). Whether a question is on topic at all is judged on meaning alone, without the lifts. Topic questions ("I'm into cybersecurity") list the closest courses with where the student stands on each; an unrecognised question that closely matches courses is treated as a topic, and one that doesn't (homework, chat) gets the list of what the advisor can do.
+
+- `src/advisor/rerank.ts` improves topic answers when a model is available: local search hands over its best 20 candidates (code, title, first sentence), and the model picks up to 5 that really fit, best first, with a short reason each. It only chooses: codes it returns that weren't offered are dropped, and on no reply, bad JSON or nothing usable the local order stands. It sees the question (student-number-like digits and emails scrubbed) and public catalog text, never the student's record.
+- `src/advisor/models.ts` is the free-tier model chain: Groq, then Mistral, then Gemini, each through its OpenAI-compatible chat endpoint, used only when its key is in `.env`, with an 8-second timeout before trying the next.
+
+Next: the chain writing answers to open-ended questions from an anonymous fact sheet.
 
 ## Accounts
 

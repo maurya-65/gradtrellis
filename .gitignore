@@ -12,3 +12,6 @@ Thumbs.db
 
 # raw page cache for the scraper; the parsed snapshot in data/ is committed
 backend/scripts/scrape/.cache/
+
+# embedding model downloaded on first use by the advisor
+backend/.cache/

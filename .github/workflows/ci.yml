@@ -33,6 +33,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # the advisor's local embedding model, downloaded on first use
+      - uses: actions/cache@v6
+        with:
+          path: backend/.cache/models
+          key: models-all-MiniLM-L6-v2
       - run: npm run typecheck
       - run: npm test
       - run: npm run build

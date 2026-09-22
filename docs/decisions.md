@@ -79,3 +79,9 @@ Paid models for the whole conversation would cost $50-150 a month at 10-15 daily
 4. The model's answer is checked locally (every course code it mentions must be in the fact sheet, it stays on topic and short). A safe fix or one targeted retry, then an honest fallback that lists the facts.
 
 The model is a chain of free tiers: Groq first (fast, no request logging by default), then Mistral (largest free allowance; training opt-out switched on), then Gemini. Free tiers change terms without notice, so each sits behind the same small interface and is easy to drop. Paid Claude Haiku with a hard monthly cap is the optional last resort.
+
+## 2026-09-22: Course search vectors in a file, not pgvector
+
+The advisor's course search uses a small local embedding model (all-MiniLM-L6-v2 through `@huggingface/transformers`), not a hosted API. The course vectors are computed once (`npm run embed`, after scraping a new calendar) into `backend/data/embeddings/`, 1.3 MB as signed bytes, and searched in memory. At 2,453 courses a full scan takes milliseconds, so `pgvector` would add a database extension (awkward to install on Windows and in CI) for no gain. Revisit if the catalog grows into the hundreds of thousands.
+
+Spelling mistakes are fixed before a question is read, against the calendar's own vocabulary plus common question words, using edit distance. Grammar needs no fixing: the rules look for words, and the embeddings compare meaning.
